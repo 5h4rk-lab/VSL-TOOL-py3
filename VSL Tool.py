@@ -16,10 +16,10 @@ import time
 # import _winreg as winreg
 #TODO: update it from qt4 to qt6
 import itertools
-from PySide import QtGui
-from PySide import QtCore
-from PySide.QtCore import Signal as pyqtSignal
-from PySide.QtCore import Slot as pyqtSlot
+import PySide6.QtGui
+import PySide6.QtCore
+from PySide6.QtCore import Signal as pyqtSignal
+from PySide6.QtCore import Slot as pyqtSlot
 
 import xml.etree.ElementTree
 import xml.etree.ElementInclude
@@ -33,8 +33,7 @@ import serial_connect as sc
 import sys
 
 if os.sys.platform.startswith("win"):
-    #TODO: just make it import winreg
-    from _winreg import *
+    from winreg import *
 #import gc
 
 ###
