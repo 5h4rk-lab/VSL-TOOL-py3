@@ -1,6 +1,9 @@
 #!/usr/bin/python2.7
 #--coding:utf-8 --
 
+#TODO: update the python3 syntax
+
+
 import os
 import sys
 import glob
