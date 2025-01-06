@@ -6,7 +6,9 @@ import re
 import sys
 from serial.serialutil import SerialException
 from event import *
-from PySide6.QtGui import QInputDialog, QMessageBox
+#from PySide6.QtGui import QInputDialog, QMessageBox
+from PySide6.QtCore import Signal as pyqtSignal, Slot as pyqtSlot
+from PySide6.QtWidgets import QInputDialog, QMessageBox
 from PySide6.QtCore import Signal as pyqtSignal, Slot as pyqtSlot
 import serial.tools.list_ports as serial_ports
 from messages import *
