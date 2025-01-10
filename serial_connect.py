@@ -178,9 +178,9 @@ def switch_to_program_execute(ser):
     if switch_to_bootloader(ser):
         ser.flushInput()
         ser.write('d')
-        print "success"
+        print("success")
     else:
-        print "STILL IN BOOTLOADER, SWITCH TO PROGRAM FROM TERA TERM"
+        print("STILL IN BOOTLOADER, SWITCH TO PROGRAM FROM TERA TERM")
 
 def serial_is_open(ser):
     """
