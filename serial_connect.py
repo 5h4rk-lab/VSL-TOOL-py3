@@ -302,7 +302,7 @@ def format_dict_to_string(dictionary):
     """
     data = StringIO.StringIO()
     for key, value in dictionary.iteritems():
-        value = unicode(value).encode("utf8")
+        value = str(value).encode("utf-8")
         data.write(key[:2])
         data.write(value)
         data.write(LINE_FEED)
