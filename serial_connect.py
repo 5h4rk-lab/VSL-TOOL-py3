@@ -242,7 +242,7 @@ def validate_crc(response):
     stx_pos = response.find(STX)
     etb_pos = response.find(ETB)
     etx_pos = response.find(ETX)
-    print stx_pos, etb_pos, etx_pos
+    print(stx_pos, etb_pos, etx_pos)
     crc_valid_p = False
     if (stx_pos >= 0) and (etb_pos >= 0) and (etx_pos >= 0):
         if int(response[etb_pos+1], 16) == HASH_METHOD:
