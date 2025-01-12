@@ -19,10 +19,12 @@ import time
 # import _winreg as winreg
 #TODO: update it from qt4 to qt6
 import itertools
-import PySide6.QtGui
-import PySide6.QtCore
+from PySide6 import QtGui, QtWidgets
+from PySide6.QtGui import QFont
+from PySide6.QtCore import Qt
 from PySide6.QtCore import Signal as pyqtSignal
 from PySide6.QtCore import Slot as pyqtSlot
+from PySide6.QtWidgets import QApplication, QLabel, QMainWindow, QTabWidget, QVBoxLayout, QWidget, QGridLayout, QPushButton, QFileDialog, QMessageBox, QInputDialog
 
 import xml.etree.ElementTree
 import xml.etree.ElementInclude
@@ -73,14 +75,24 @@ class FormComponent(object):
         self.button_text_false = button_txt_false
         self.initSubComponents()
 
+
+
+
     def initSubComponents(self):
-        category_font = QtGui.QFont("Helvetica", 12, QtGui.QFont.Bold)
-        status_font = QtGui.QFont("Helvetica", 12)
-        self.fixed_label = QtGui.QLabel(self.fixed_label_text)
+        # Fonts
+        category_font = QFont("Helvetica", 12, QFont.Bold)
+        status_font = QFont("Helvetica", 12)
+
+        # Fixed label
+        self.fixed_label = QLabel(self.fixed_label_text)
         self.fixed_label.setFont(category_font)
-        self.variable_label = QtGui.QLabel(self.variable_label_text_false)
+
+        # Variable label
+        self.variable_label = QLabel(self.variable_label_text_false)
         self.variable_label.setFont(status_font)
-        self.btn = QtGui.QPushButton(self.button_text_false)
+
+        # Button
+        self.btn = QPushButton(self.button_text_false)
         self.btn.setMinimumWidth(100)
         self.btn.setMinimumHeight(40)
         self.btn.setFont(status_font)
@@ -119,32 +131,32 @@ class BootloaderComponent(FormComponent):
         self.btn.clicked.connect(self.buttonClicked)
 
     def buttonClicked(self):
-        print "Selecting bootloader S19 to program"
+        print( "Selecting bootloader S19 to program")
         start_dir = 'C://' if not self.last_dir else self.last_dir
-        fname = QtGui.QFileDialog.getOpenFileName(None, 'Select Bootloader S19 File', start_dir)[0]
+        fname = QFileDialog.getOpenFileName(None, 'Select Bootloader S19 File', start_dir)[0]
         if fname:
-            print "S19 selected:"
-            print " " + str(fname)
+            print ("S19 selected:")
+            print (" " + str(fname))
             self.setDetected(False)
             self.last_dir = fname
-            print "Attempting to program bootloader"
+            print ("Attempting to program bootloader")
             self.programmer.vel_execute(str(fname))
             self.checkForBootloader()
-            print "\n"
+            print ("\n")
         else:
-            print "No S19 selected \n"
-
+            print ("No S19 selected \n"
+)
     def enable(self):
         super(BootloaderComponent, self).enable()
         self.checkForBootloader()
 
     def checkForBootloader(self):
-        print "Checking for bootloader"
+        print ("Checking for bootloader")
         if self.serial.switchToBootloader():
-            print "Bootloader detected \n"
+            print ("Bootloader detected \n")
             self.setDetected(True)
         else:
-            print "Bootloader not detected \n"
+            print ("Bootloader not detected \n")
             self.setDetected(False)
 
 ###
@@ -160,27 +172,27 @@ class FixedInfoComponent(FormComponent):
         self.btn.clicked.connect(self.buttonClicked)
 
     def selectConfigFile(self):
-        print "User is selecting a config file"
+        print("User is selecting a config file")
         start_dir = './' if not self.config else self.config.fname
-        fname = QtGui.QFileDialog.getOpenFileName(None, 'Select Configuration File', start_dir)[0]
+        fname = QFileDialog.getOpenFileName(None, 'Select Configuration File', start_dir)[0]
         if fname:
             self.config = FixedInformationConfig(str(fname))
-            print "Config file selected: "
-            print " " + self.config.fname + "\n"
+            print("Config file selected: ")
+            print(" " + self.config.fname + "\n")
         else:
-            print "No config file selected \n"
+            print("No config file selected \n")
 
     def saveConfigFile(self):
         if self.config:
-            print "Selecting file to save last fixed info configuration"
-            fname = QtGui.QFileDialog.getSaveFileName(None, 'Save as', self.config.fname)
+            print("Selecting file to save last fixed info configuration")
+            fname = QFileDialog.getSaveFileName(None, 'Save as', self.config.fname)
             if fname:
-                print "File selected. Saving configuration to " + str(fname) + "\n"
+                print("File selected. Saving configuration to " + str(fname) + "\n")
                 self.config.writeFile(str(fname))
             else:
-                print "No file selected. Not saving configuration \n"
+                print("No file selected. Not saving configuration \n")
         else:
-            print "Cannot save configuration- don't have a configuration to save \n"
+            print("Cannot save configuration- don't have a configuration to save \n")
 
     def buttonClicked(self):
         if not self.detected:
@@ -189,22 +201,22 @@ class FixedInfoComponent(FormComponent):
             self.readFixedInformation()
 
     def readFixedInformation(self):
-        print "User wants to read fixed information \n"
+        print("User wants to read fixed information \n")
         if self.serial.switchToBootloader():
             self.serial.ser.flushInput()
-            print "Sending a 'c' to bootloader to read fixed information"
+            print("Sending a 'c' to bootloader to read fixed information")
             self.serial.ser.write('cFF')
-            found, tags = self.serial.waitForResponse(\
+            found, _ = self.serial.waitForResponse(
                 desired_tag=Messages.DFLASH_DATA)
             if found:
-                print "\nResponse:"
-                print found.text + "\n"
+                print("\nResponse:")
+                print(found.text + "\n")
                 dictionary = self.parseResponse(found.text)
                 FixedInformationDialog.readFixedInformation(dictionary)
             else:
-                QtGui.QMessageBox.information(None, 'Read Fixed Info',
-                                              "Fixed information has not " +\
-                                                  "been written")
+                QMessageBox.information(None, 'Read Fixed Info',
+                                        "Fixed information has not " +
+                                        "been written")
 
     def parseResponse(self, response):
         dictionary = {}
@@ -229,7 +241,7 @@ class FixedInfoComponent(FormComponent):
         return dictionary
 
     def writeFixedInformation(self):
-        print "User wants to write fixed information \n"
+        print ("User wants to write fixed information \n")
         if not self.config:
             self.selectConfigFile()
         fixedInfo = FixedInformationDialog.writeFixedInformation(self.config)
@@ -242,56 +254,81 @@ class FixedInfoComponent(FormComponent):
             # return
             if self.serial.switchToBootloader():
                 self.serial.ser.flushInput()
-                print "Sending a 'b' to bootloader to write fixed information"
+                print ("Sending a 'b' to bootloader to write fixed information")
                 self.serial.ser.write('bFF')
                 self.serial.ser.write("%04X" % len(fixedInfo))
 
                 found, tags = self.serial.waitForResponse( \
                     desired_tag=Messages.DFLASH_SEND_DATA)
                 if found:
-                    print "Sending fixed information: "
+                    print ("Sending fixed information: ")
                     for ch in fixedInfo:
                         self.serial.ser.write(ch)
                         time.sleep(.001)
                     self.checkForFixedInfo()
                 else:
-                    print "Error:"
+                    print ("Error:")
                     for tag in tags:
-                        print tag.name, tag.text
+                        print(tag.name, tag.text)
             else:
-                print "Failed to switch to bootloader; " +\
-                    "no fixed information written \n"
+                print("Failed to switch to bootloader; " +
+                      "no fixed information written \n")
         else:
-            print "No fixed information written \n"
+            print("No fixed information written \n")
 
     def enable(self):
         super(FixedInfoComponent, self).enable()
         self.checkForFixedInfo()
 
     def checkForFixedInfo(self):
-        print "Checking for fixed information"
+        print("Checking for fixed information")
         if self.serial.switchToBootloader():
             self.serial.ser.flushInput()
-            print "Sending a 'c' to bootloader to read fixed information"
+            print("Sending a 'c' to bootloader to read fixed information")
             self.serial.ser.write('cFF')
             # self.serial.ser.write('\x00')
-            found, tags = self.serial.waitForResponse(\
+            found, _ = self.serial.waitForResponse(
                 desired_tag=Messages.DFLASH_DATA, max_length=1000)
 
             if found:
-                print "Fixed information has been written \n"
+                print("Fixed information has been written \n")
                 self.setDetected(True)
             else:
-                print "Fixed information has not been written \n"
+                print("Fixed information has not been written \n")
                 self.setDetected(False)
         else:
-            print "Failed to switch to bootloader; " +\
-                "could not check for fixed information \n"
+            print("Failed to switch to bootloader; could not check for fixed information \n")
 
 ###
 # Custom dialog for writing fixed info
 ###
-class FixedInformationDialog(QtGui.QDialog):
+class FixedInformationDialog(PySide6.QtWidgets.QDialog):
+    """
+    A dialog for displaying and editing fixed information.
+
+    This dialog can operate in two modes: read-only and write. In read-only mode, it displays the information
+    from a given dictionary without allowing modifications. In write mode, it allows the user to edit the information
+    based on a given configuration.
+
+    Attributes:
+        lineEdit_dictionary (dict): A dictionary to store QLineEdit widgets for each category identifier.
+
+    Methods:
+        __init__(config=None, dictionary=None, readonly=False, parent=None):
+            Initializes the dialog in either read-only or write mode based on the readonly flag.
+
+        initForRead(dictionary):
+            Initializes the dialog for read-only mode using the provided dictionary.
+
+        initForWrite(config):
+            Initializes the dialog for write mode using the provided configuration.
+
+        writeFixedInformation(fixed_info_config):
+            Static method to open the dialog in write mode and return the updated fixed information as a formatted string.
+
+        readFixedInformation(fixed_info_dictionary):
+            Static method to open the dialog in read-only mode to display the fixed information.
+    """
 
     def __init__(self, config=None, dictionary=None, readonly=False, parent=None):
         super(FixedInformationDialog, self).__init__(parent)
@@ -302,34 +339,34 @@ class FixedInformationDialog(QtGui.QDialog):
             self.initForWrite(config)
 
     def initForRead(self, dictionary):
-        grid = QtGui.QGridLayout()
+        grid = PySide6.QtWidgets.QGridLayout()
         current_row = 0
         for key in dictionary.keys():
-            label = QtGui.QLabel(key)
-            lineEdit = QtGui.QLineEdit()
+            label = PySide6.QtWidgets.QLabel(key)
+            lineEdit = PySide6.QtWidgets.QLineEdit()
             lineEdit.setText(dictionary[key])
             lineEdit.setReadOnly(True)
             grid.addWidget(label, current_row, 0)
             grid.addWidget(lineEdit, current_row, 1)
             current_row = current_row + 1
-        buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok)
+        buttonBox = PySide6.QtWidgets.QDialogButtonBox(PySide6.QtWidgets.QDialogButtonBox.Ok)
         buttonBox.accepted.connect(self.accept)
         grid.addWidget(buttonBox, current_row, 1)
         self.setLayout(grid)
         self.setWindowTitle("Read Fixed Info")
 
     def initForWrite(self, config):
-        grid = QtGui.QGridLayout()
+        grid = PySide6.QtWidgets.QGridLayout()
         current_row = 0
         for category in config.list_of_categories:
-            label = QtGui.QLabel(category.title)
-            lineEdit = QtGui.QLineEdit()
+            label = PySide6.QtWidgets.QLabel(category.title)
+            lineEdit = PySide6.QtWidgets.QLineEdit()
             self.lineEdit_dictionary[category.identifier] = lineEdit
             lineEdit.setText(category.default)
             grid.addWidget(label, current_row, 0)
             grid.addWidget(lineEdit, current_row, 1)
             current_row = current_row + 1
-        buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Cancel)
+        buttonBox = PySide6.QtWidgets.QDialogButtonBox(PySide6.QtWidgets.QDialogButtonBox.Ok | PySide6.QtWidgets.QDialogButtonBox.Cancel)
         buttonBox.accepted.connect(self.accept)
         buttonBox.rejected.connect(self.reject)
         grid.addWidget(buttonBox, current_row, 1)
@@ -339,7 +376,7 @@ class FixedInformationDialog(QtGui.QDialog):
     @staticmethod
     def writeFixedInformation(fixed_info_config):
         if fixed_info_config:
-            print "Fixed information dialog opening in write mode"
+            print("Fixed information dialog opening in write mode")
             dlg = FixedInformationDialog(config=fixed_info_config,
                                          readonly=False)
             if dlg.exec_():
@@ -486,7 +523,7 @@ class VelCodeComponent(FormComponent):
     def buttonClicked(self):
         print ("Selecting vel S19 to program")
         start_dir = 'C://' if not self.last_dir else self.last_dir
-        fname = QtGui.QFileDialog.getOpenFileName(None, 'Select VEL S19 File', start_dir)[0]
+        fname = QFileDialog.getOpenFileName(None, 'Select VEL S19 File', start_dir)[0]
         if fname:
             print ("S19 selected:")
             print (" " + str(fname))
@@ -586,7 +623,7 @@ class ProgrammerExecutable(object):
         txt = "VEL" if self.vel else "RCD"
         print ("User is selecting " + txt + " programmer executable")
         start_dir = 'C://' if not self.path else self.path
-        fname = QtGui.QFileDialog.getOpenFileName(None, 'Select Programmer Executable', start_dir)[0]
+        fname = QFileDialog.getOpenFileName(None, 'Select Programmer Executable', start_dir)[0]
         if fname:
             self.path = str(fname)
             self.found = True
@@ -601,17 +638,17 @@ class ProgrammerExecutable(object):
             #print subprocess.check_output([self.path,s19_file,'-device=MC9S12XEP100','-unsecure','-masserase','-program','-execute'])\
             print(subprocess.check_output([self.path,s19_file,'-device=MC9S12XEP100','-erase=selective','-program','-execute']))
             print("Finished programming \n")
-        except Exception, e:
+        except Exception as e:
             print("Error trying to execute programmer executable")
-            QtGui.QMessageBox.critical(None, 'Programmer executable failed', '%s' % (e))
+            QMessageBox.critical(None, 'Programmer executable failed', '%s' % (e))
 
     def gfi_execute(self, s19_file):
         try:
             print(subprocess.check_output([self.path,s19_file,'-device=MC9S08SH4','-trim=33.6','-nvloc=FFAE','-secure','-masserase','-program','-execute']))
             print("Finished programming \n")
-        except Exception, e:
+        except Exception as e:
             print("Error trying to execute programmer executable")
-            QtGui.QMessageBox.critical(None, 'Programmer executable failed', '%s' % (e))
+            QMessageBox.critical(None, 'Programmer executable failed', '%s' % (e))
 
 ###
 # Class that handles the label printer
@@ -628,7 +665,7 @@ class LabelPrinter(object):
     def establishConnection(self, ip_address=None, suppress_error=False):
         if not ip_address:
             print("User is entering an ip address for the label printer")
-            text, ok = QtGui.QInputDialog.getText(None, 'Connect to Printer', 'Enter printer ip address:', text=self.ip)
+            text, ok = QInputDialog.getText(None, 'Connect to Printer', 'Enter printer ip address:', text=self.ip)
             if text and ok:
                 self.ip = text
                 ip_address = text
@@ -645,14 +682,14 @@ class LabelPrinter(object):
                 self.printer.template_init()
                 self.printer.choose_template(self.template)
                 print("Succesful connection to printer \n")
-            except Exception, e:
+            except Exception as e:
                 print("Error connecting to the printer at the given ip \n")
                 if not suppress_error:
-                    QtGui.QMessageBox.critical(None, 'Could Not Connect To Printer', '%s' % (e))
+                    QMessageBox.critical(None, 'Could Not Connect To Printer', '%s' % (e))
 
     def changeTemplate(self):
         print("User is entering a new template number")
-        text, ok = QtGui.QInputDialog.getText(None, 'Change Template', 'Enter new template number:', text=str(self.template))
+        text, ok = QInputDialog.getText(None, 'Change Template', 'Enter new template number:', text=str(self.template))
         if text and ok:
             try:
                 self.template = int(text)
@@ -668,7 +705,7 @@ class LabelPrinter(object):
         "User would like to print label"
         if not self.printer:
             print( "Cannot print label; do not have a connection to the printer \n")
-            QtGui.QMessageBox.critical(None, 'Printing Error', 'No connection to the printer')
+            QMessageBox.critical(None, 'Printing Error', 'No connection to the printer')
         else:
             today = datetime.datetime.today()
             date = str(today.month) + '/' + str(today.day) + '/' + str(today.year)
@@ -681,7 +718,7 @@ class LabelPrinter(object):
         "User would like to print a test label"
         if not self.printer:
             print ("Cannot print test label; do not have a connection to the printer \n")
-            QtGui.QMessageBox.critical(None, 'Printing Error', 'No connection to the printer')
+            QMessageBox.critical(None, 'Printing Error', 'No connection to the printer')
         else:
             today = datetime.datetime.today()
             date = str(today.month) + '/' + str(today.day) + '/' + str(today.year)
@@ -693,7 +730,7 @@ class LabelPrinter(object):
 ###
 # Customized tab widget
 ###
-class CustomTabWidget(QtGui.QTabWidget):
+class CustomTabWidget(QtWidgets.QTabWidget):
 
     def __init__(self):
         super(CustomTabWidget, self).__init__()
@@ -798,24 +835,24 @@ class MainWindow(QtGui.QMainWindow):
                     temp = self.tabs[j]
                     self.tabs[j] = self.tabs[j+1]
                     self.tabs[j+1] = temp
-        print self.tabs
+        print(self.tabs)
         for i, tab in enumerate(self.tabs):
             if self.controller.serial_connected():
                 self.page_title = self.config_index[i][0]
                 self.controller.populate_from_vel(self.page_title)
             self.lineEdits = tab.info_line_list.findChildren(QtGui.QLineEdit)
-            print self.lineEdits
+            print(self.lineEdits)
             for j,line in enumerate(self.lineEdits):
-                line.setText(unicode(self.controller.config_list[i+1][j][con.ConfigFields.VALUE]))
-                print line.setText
+                line.setText(str(self.controller.config_list[i+1][j][con.ConfigFields.VALUE]))
+                print(line.setText)
 
 
 
 
     def onReadSave(self):
 
-        dlg = QtGui.QFileDialog.DontResolveSymlinks | QtGui.QFileDialog.ShowDirsOnly
-        directory = QtGui.QFileDialog.getExistingDirectory()
+        dlg = QtWidgets.QFileDialog.DontResolveSymlinks | QtWidgets.QFileDialog.ShowDirsOnly
+        directory = QtWidgets.QFileDialog.getExistingDirectory()
         print ('selected_directory:', directory)
         unrecognized_lists = self.controller.populate_from_save_dir(directory.replace('\\', '/'))
         # Check if the folder had any .dflash files
@@ -834,7 +871,7 @@ class MainWindow(QtGui.QMainWindow):
             self.lineEdits = tab.info_line_list.findChildren(QtGui.QLineEdit)
             print (self.lineEdits)
             for j,line in enumerate(self.lineEdits):
-                line.setText(unicode(self.controller.config_list[i+1][j][con.ConfigFields.VALUE]))
+                line.setText(str(self.controller.config_list[i+1][j][con.ConfigFields.VALUE]))
                 print (line.setText)
 
 
@@ -897,7 +934,8 @@ class MainWindow(QtGui.QMainWindow):
         tab_widget.addTab(dfl_tab, "DFL")
         tab_widget.addTab(vel_tab, "VEL")
         tab_widget.addTab(gfi_tab, "RCD")
-        tab_widget.connect(tab_widget,QtCore.SIGNAL("currentChanged(int)"),tab_widget,QtCore.SLOT("tabChangedSlot(int)"))
+        #tab_widget.connect(tab_widget,QtCore.SIGNAL("currentChanged(int)"),tab_widget,QtCore.SLOT("tabChangedSlot(int)"))
+        tab_widget.currentChanged.connect(tab_widget.tabChangedSlot)
         self.setCentralWidget(tab_widget)
 
     def setupDflGrid(self):
@@ -1082,7 +1120,7 @@ class MainWindow(QtGui.QMainWindow):
         self.controller.set_config_list(list_)
         #print self.controller.config_index[1:]
         self.config_index = self.controller.config_index[1:]
-        print self.config_index
+        print(self.config_index)
         if self.controller.get_config_list():
             self.controller.set_id_map(self.controller.make_id_map())
 
@@ -1091,7 +1129,7 @@ class MainWindow(QtGui.QMainWindow):
         label_font = QtGui.QFont("Helvetica", 12, QtGui.QFont.Bold)
         label = QtGui.QLabel("Current Flash Status")
         label.setFont(label_font)
-        grid.addWidget(label, 0, 0, 1, 3, QtCore.Qt.AlignCenter)
+        grid.addWidget(label, 0, 0, 1, 3, Qt.AlignCenter)
         grid.addWidget(self.bootloader.fixed_label, 1, 0)
         grid.addWidget(self.bootloader.variable_label, 1, 1)
         grid.addWidget(self.bootloader.btn, 1, 2)
@@ -1114,23 +1152,23 @@ class MainWindow(QtGui.QMainWindow):
         button.setMinimumHeight(40)
         button.setFont(button_font)
         button.clicked.connect(self.gfiButtonClicked)
-        grid.addWidget(label, 0, 0, QtCore.Qt.AlignCenter)
+        grid.addWidget(label, 0, 0, Qt.AlignCenter)
         grid.addWidget(button, 0, 1)
         return grid
 
     def gfiButtonClicked(self):
-        print "Selecting RCD S19 to program"
+        print ("Selecting RCD S19 to program")
         start_dir = 'C://' if not self.last_gfi_dir else self.last_gfi_dir
         fname = QtGui.QFileDialog.getOpenFileName(None, 'Select RCD S19 File', start_dir)[0]
         if fname:
-            print "S19 selected:"
-            print " " + str(fname)
+            print ("S19 selected:")
+            print (" " + str(fname))
             self.last_dir = fname
-            print "Attempting to program gfi board"
+            print ("Attempting to program gfi board")
             self.gfi_programmer.gfi_execute(str(fname))
-            print "\n"
+            print ("\n")
         else:
-            print "No S19 selected \n"
+            print ("No S19 selected \n")
 
     def setupMenu(self):
         menubar = self.menuBar()
@@ -1234,25 +1272,25 @@ class MainWindow(QtGui.QMainWindow):
     def toggleAutoIncrement(self):
         global AUTO_INCREMENT
         if AUTO_INCREMENT:
-            print "Disabling serial number auto-increment \n"
+            print ("Disabling serial number auto-increment \n")
             AUTO_INCREMENT = False
             self.autoAction.setText("Enable Auto Increment")
         else:
-            print "Enabling serial number auto-increment \n"
+            print ("Enabling serial number auto-increment \n")
             AUTO_INCREMENT = True
             self.autoAction.setText("Disable Auto Increment")
 
     def printLabel(self):
-        print "Trying to print a label"
+        print ("Trying to print a label")
         success = False
         if self.fixedinfo:
             if self.fixedinfo.config:
                 if self.fixedinfo.config.last_serial_num:
-                    print "Last serial number = " + self.fixedinfo.config.last_serial_num
+                    print ("Last serial number = " + self.fixedinfo.config.last_serial_num)
                     success = True
                     self.printer.printLabel(self.fixedinfo.config.last_serial_num)
         if not success:
-            print "Last serial number is unknown; can't print label \n"
+            print ("Last serial number is unknown; can't print label \n")
 
     def closeEvent(self, event):
         if self.fixedinfo.config:
@@ -1292,8 +1330,8 @@ class NotebookTab(QtGui.QWidget):
         widget.setLayout(layout)
 
         scroll = QtGui.QScrollArea()
-        scroll.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
-        scroll.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         scroll.setWidgetResizable(False)
         scroll.setWidget(widget)
         #Scroll Area Layer add
@@ -1355,7 +1393,7 @@ class ControlPanel(QtGui.QWidget):
         faults = self.parent.controller.write_page_to_VEL(current_page_text)
         if faults:
             string = ""
-            print faults
+            print (faults)
             for fault in faults:
                 if len(fault) == 2:
                     string += "Fault at id: (" + fault[0] + ") | " + self.parent.controller.fault_messages[int(fault[1])] + '\n'
@@ -1389,7 +1427,7 @@ class ControlPanel(QtGui.QWidget):
                 else:
                     string = fault
             QtGui.QMessageBox.information(self, "Faults", "Faults on Pages",QtGui.QMessageBox.Ok)
-            print faults
+            print (faults)
         else:
             QtGui.QMessageBox.information(self, "All Pages Written", "All pages written successfully!",QtGui.QMessageBox.Ok)
 
@@ -1410,8 +1448,8 @@ class AddInfo(QtGui.QWidget):
 
         if field[con.ConfigFields.TYPE] is int:
             if field[con.ConfigFields.VALUE] is None:
-                field[con.ConfigFields.VALUE] = unicode('')
-            self.tc =QtGui.QLineEdit(unicode(field[con.ConfigFields.VALUE]))  #wx.lib.intctrl.IntCtrl(self.parent, -1, field[con.ConfigFields.VALUE], pos=(x+220, y-3), size=(200, -1), allow_none=True)
+                field[con.ConfigFields.VALUE] = str('')
+            self.tc =QtGui.QLineEdit(str(field[con.ConfigFields.VALUE]))  #wx.lib.intctrl.IntCtrl(self.parent, -1, field[con.ConfigFields.VALUE], pos=(x+220, y-3), size=(200, -1), allow_none=True)
             grid.addWidget(label1, i, 0)
             grid.addWidget(self.tc, i, 1)
             self.edits.append(self.tc)
@@ -1426,7 +1464,7 @@ class AddInfo(QtGui.QWidget):
         else:
             if field[con.ConfigFields.VALUE] is None:
                 field[con.ConfigFields.VALUE] = ""
-            self.tc =  QtGui.QLineEdit(unicode(field[con.ConfigFields.VALUE]))#self.tc = wx.TextCtrl(self.parent, -1, str(field[con.ConfigFields.VALUE]), pos=(x+220, y-3), size=(200, -1))
+            self.tc =  QtGui.QLineEdit(str(field[con.ConfigFields.VALUE]))#self.tc = wx.TextCtrl(self.parent, -1, str(field[con.ConfigFields.VALUE]), pos=(x+220, y-3), size=(200, -1))
             grid.addWidget(label1, i, 0)
             grid.addWidget(self.tc, i, 1)
             self.edits.append(self.tc)
@@ -1450,11 +1488,11 @@ class AddInfo(QtGui.QWidget):
 
 
     def mousePressEvent(self):
-        print " I clicked "
+        print (" I clicked ")
         i = self.parent.page_index
         j = self.itemindex
-        print i
-        print j
+        print (i)
+        print (j)
 
         hptext = self.generate_help_message(self.parent.parent.controller.config_list[i][j])
         self.parent.parent.hp.setText(hptext)
@@ -1490,7 +1528,7 @@ class AddInfo(QtGui.QWidget):
 
     def HelpMessages(self, info):
         def OnSetFocus(event):
-            self.GetGrandParent().GetGrandParent().hp.setText(generate_help_message(info))
+            self.GetGrandParent().GetGrandParent().hp.setText(self.generate_help_message(info))
         return OnSetFocus
 
 
@@ -1501,7 +1539,7 @@ class AddInfo(QtGui.QWidget):
 # Main
 ###
 def main():
-    app = QtGui.QApplication(sys.argv)
+    app = QApplication(sys.argv)
     ex = MainWindow()
     sys.exit(app.exec_())
 
