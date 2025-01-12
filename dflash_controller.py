@@ -65,7 +65,7 @@ class Controller(object):
     def disconnect_serial(self):
         if self.ser is not None and self.ser.isOpen():
             self.ser.close()
-            print 'Disconnected serial port'
+            print ('Disconnected serial port')
     
     ### Moved to dflash_gui to add open_file functionality ###
     # def init_config_file(self, number):
@@ -171,7 +171,7 @@ class Controller(object):
     def complete_validation(self):
         faults = []
         for i, page in enumerate(self.config_list):
-            page_faults = page_validation(page)
+            page_faults = self.page_validation(page)
             if page_faults != []:
                 logging.info("Page %d faults:" % i)
                 logging.info(page_faults)
@@ -493,5 +493,5 @@ if __name__ == '__main__':
     # else:
     #     print "Nothing Happened"
     config_index, config_list = create_config_list('ev_1_config.txt')
-    print 'HERE IS OUTPUT'
-    print config_list
+    print ('HERE IS OUTPUT')
+    print (config_list)
