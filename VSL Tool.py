@@ -21,10 +21,11 @@ import time
 import itertools
 from PySide6 import QtGui, QtWidgets
 from PySide6.QtGui import QFont
+from PySide6.QtGui import QGuiApplication
 from PySide6.QtCore import Qt
 from PySide6.QtCore import Signal as pyqtSignal
 from PySide6.QtCore import Slot as pyqtSlot
-from PySide6.QtWidgets import QApplication, QLabel, QMainWindow, QTabWidget, QVBoxLayout, QWidget, QGridLayout, QPushButton, QFileDialog, QMessageBox, QInputDialog
+from PySide6.QtWidgets import QApplication, QLabel, QMainWindow, QTabWidget,QComboBox, QVBoxLayout, QWidget, QGridLayout, QPushButton, QFileDialog, QMessageBox, QInputDialog, QDialogButtonBox, QScrollArea, QTextEdit, QLineEdit
 
 import xml.etree.ElementTree
 import xml.etree.ElementInclude
@@ -302,7 +303,7 @@ class FixedInfoComponent(FormComponent):
 ###
 # Custom dialog for writing fixed info
 ###
-class FixedInformationDialog(PySide6.QtWidgets.QDialog):
+class FixedInformationDialog(QtWidgets.QDialog):
     """
     A dialog for displaying and editing fixed information.
 
@@ -339,34 +340,34 @@ class FixedInformationDialog(PySide6.QtWidgets.QDialog):
             self.initForWrite(config)
 
     def initForRead(self, dictionary):
-        grid = PySide6.QtWidgets.QGridLayout()
+        grid = QtWidgets.QGridLayout()
         current_row = 0
         for key in dictionary.keys():
-            label = PySide6.QtWidgets.QLabel(key)
-            lineEdit = PySide6.QtWidgets.QLineEdit()
+            label = QtWidgets.QLabel(key)
+            lineEdit = QtWidgets.QLineEdit()
             lineEdit.setText(dictionary[key])
             lineEdit.setReadOnly(True)
             grid.addWidget(label, current_row, 0)
             grid.addWidget(lineEdit, current_row, 1)
             current_row = current_row + 1
-        buttonBox = PySide6.QtWidgets.QDialogButtonBox(PySide6.QtWidgets.QDialogButtonBox.Ok)
+        buttonBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok)
         buttonBox.accepted.connect(self.accept)
         grid.addWidget(buttonBox, current_row, 1)
         self.setLayout(grid)
         self.setWindowTitle("Read Fixed Info")
 
     def initForWrite(self, config):
-        grid = PySide6.QtWidgets.QGridLayout()
+        grid = QtWidgets.QGridLayout()
         current_row = 0
         for category in config.list_of_categories:
-            label = PySide6.QtWidgets.QLabel(category.title)
-            lineEdit = PySide6.QtWidgets.QLineEdit()
+            label = QtWidgets.QLabel(category.title)
+            lineEdit = QtWidgets.QLineEdit()
             self.lineEdit_dictionary[category.identifier] = lineEdit
             lineEdit.setText(category.default)
             grid.addWidget(label, current_row, 0)
             grid.addWidget(lineEdit, current_row, 1)
             current_row = current_row + 1
-        buttonBox = PySide6.QtWidgets.QDialogButtonBox(PySide6.QtWidgets.QDialogButtonBox.Ok | PySide6.QtWidgets.QDialogButtonBox.Cancel)
+        buttonBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel)
         buttonBox.accepted.connect(self.accept)
         buttonBox.rejected.connect(self.reject)
         grid.addWidget(buttonBox, current_row, 1)
@@ -748,7 +749,7 @@ class CustomTabWidget(QtWidgets.QTabWidget):
 ###
 # Class that holds the main window
 ###
-class MainWindow(QtGui.QMainWindow):
+class MainWindow(QMainWindow):
     last_gfi_dir = None
 
     def __init__(self):
@@ -840,7 +841,7 @@ class MainWindow(QtGui.QMainWindow):
             if self.controller.serial_connected():
                 self.page_title = self.config_index[i][0]
                 self.controller.populate_from_vel(self.page_title)
-            self.lineEdits = tab.info_line_list.findChildren(QtGui.QLineEdit)
+            self.lineEdits = tab.info_line_list.findChildren(QLineEdit)
             print(self.lineEdits)
             for j,line in enumerate(self.lineEdits):
                 line.setText(str(self.controller.config_list[i+1][j][con.ConfigFields.VALUE]))
@@ -872,23 +873,23 @@ class MainWindow(QtGui.QMainWindow):
             print (self.lineEdits)
             for j,line in enumerate(self.lineEdits):
                 line.setText(str(self.controller.config_list[i+1][j][con.ConfigFields.VALUE]))
-                print (line.setText)
+                print(line.setText)
 
 
     def onWriteSave(self):
         #create a new empty folder before you choose directory, and then save it in the folder you found
-        dlg = QtGui.QFileDialog.DontResolveSymlinks | QtGui.QFileDialog.ShowDirsOnly
-        directory = QtGui.QFileDialog.getExistingDirectory()
+        dlg = QFileDialog.DontResolveSymlinks | QtGui.QFileDialog.ShowDirsOnly
+        directory = QFileDialog.getExistingDirectory()
         print ('selected_directory:', directory)
 
-        msgBox = QtGui.QMessageBox(QtGui.QMessageBox.Warning,
+        msgBox = QMessageBox(QMessageBox.Warning,
                 "QMessageBox.warning()", "Do you really want to save the latest data?",
-                QtGui.QMessageBox.NoButton, self)
-        msgBox.addButton("Yes", QtGui.QMessageBox.AcceptRole)
-        msgBox.addButton("No", QtGui.QMessageBox.RejectRole)
-        if msgBox.exec_() == QtGui.QMessageBox.AcceptRole:
+                QMessageBox.NoButton, self)
+        msgBox.addButton("Yes", QMessageBox.AcceptRole)
+        msgBox.addButton("No", QMessageBox.RejectRole)
+        if msgBox.exec_() == QMessageBox.AcceptRole:
             self.controller.save_user_values(directory.replace('\\', '/'))
-            reply = QtGui.QMessageBox.information(self,
+            reply = QMessageBox.information(self,
                 "QMessageBox.information()", 'The files are saved in the folder you choose')
         else:
             pass
@@ -906,6 +907,28 @@ class MainWindow(QtGui.QMainWindow):
             self.controller.ser.close()
         self.close()
 
+
+    #    def OnClose(self):
+    # print("Closing")
+    
+    # def close_serial():
+    #     try:
+    #         if self.controller.serial_connected():
+    #             print("Serial connection open, attempting to close...")
+    #             self.controller.switch_to_execute()  # Long-running task
+    #             if self.controller.ser and self.controller.ser.isOpen():
+    #                 self.controller.ser.close()
+    #                 print("Serial connection closed.")
+    #     except Exception as e:
+    #         print(f"Error during serial closure: {e}")
+    
+    # # Run the serial closure task in a background thread to avoid blocking the main thread
+    # threading.Thread(target=close_serial).start()
+    
+    # # Close the window immediately
+    # self.close()
+    # print("Window closed successfully.")
+
     def OnRestart(self):
         if self.controller.serial_connected():
             self.controller.switch_to_execute()
@@ -917,17 +940,19 @@ class MainWindow(QtGui.QMainWindow):
 
 
     def center(self):
+        screen = QGuiApplication.primaryScreen()
+        screen_geometry = screen.availableGeometry()
         qr = self.frameGeometry()
-        cp = QtGui.QDesktopWidget().availableGeometry().center()
+        cp = screen_geometry.center()
         qr.moveCenter(cp)
         self.move(qr.topLeft())
 
     def setupLayout(self):
         tab_widget = CustomTabWidget()
         tab_widget.modeChanged += self.formChangeHandler
-        gfi_tab = QtGui.QWidget()
-        vel_tab = QtGui.QWidget()
-        dfl_tab = QtGui.QWidget()
+        gfi_tab = QWidget()
+        vel_tab = QWidget()
+        dfl_tab = QWidget()
         gfi_tab.setLayout(self.setupGfiGrid())
         vel_tab.setLayout(self.setupVelGrid())
         dfl_tab.setLayout(self.setupDflGrid())
@@ -949,13 +974,13 @@ class MainWindow(QtGui.QMainWindow):
         #----------------------------------------------------------------------
         #Serial connection
 
-        grid = QtGui.QGridLayout()
+        grid = QGridLayout()
         label_font = QtGui.QFont("Helvetica", 12, QtGui.QFont.Bold)
 
-        label1 = QtGui.QLabel("Select Serial Port", self)
-        label2 = QtGui.QLabel("--or--", self)
-        label3 = QtGui.QLabel("Select Configruation", self)
-        combo2 = QtGui.QComboBox(self)
+        label1 = QLabel("Select Serial Port", self)
+        label2 = QLabel("--or--", self)
+        label3 = QLabel("Select Configruation", self)
+        combo2 = QComboBox(self)
         combo2.addItem(available_configs[0])
         combo2.addItem(available_configs[1])
         combo2.addItem(available_configs[2])
@@ -963,11 +988,11 @@ class MainWindow(QtGui.QMainWindow):
         combo2.addItem(available_configs[4])
         combo2.addItem(available_configs[5])
         combo2.activated.connect(self.new_config)
-        btn1 = QtGui.QPushButton("Open Serial Port", self)
+        btn1 = QPushButton("Open Serial Port", self)
         btn1.clicked.connect(self.OnClick1)
-        btn2 = QtGui.QPushButton("Open Configruation", self)
+        btn2 = QPushButton("Open Configruation", self)
         btn2.clicked.connect(self.OnClick2)
-        btn3 = QtGui.QPushButton("Select Serial Port", self)
+        btn3 = QPushButton("Select Serial Port", self)
         btn3.clicked.connect(self.serial.selectSerialPort)
 
 
@@ -999,7 +1024,7 @@ class MainWindow(QtGui.QMainWindow):
             #Get the VEL type
             vel_type = self.controller.determine_vel_type() #sets vel type and config list/index
             if not vel_type:
-                QtGui.QMessageBox.information(self, "Reading Error!", "Could not determine green board type!\nEnsure VEL page 0 is written before considering other issues.",QtGui.QMessageBox.Ok)
+                QMessageBox.information(self, "Reading Error!", "Could not determine green board type!\nEnsure VEL page 0 is written before considering other issues.",QMessageBox.Ok)
             else:
                 self.init_config_file(vel_type)
                 ####################### The Notebook Startup
@@ -1011,7 +1036,7 @@ class MainWindow(QtGui.QMainWindow):
 
                 #######################
         else:
-            QtGui.QMessageBox.information(self, "Invalid Port", "Selected serial port could not be connected or opened",QtGui.QMessageBox.Ok)
+            QMessageBox.information(self, "Invalid Port", "Selected serial port could not be connected or opened",QMessageBox.Ok)
 
 
 
@@ -1043,19 +1068,19 @@ class MainWindow(QtGui.QMainWindow):
     def second_window(self):
 
 
-        wid = QtGui.QWidget()
-        grid = QtGui.QGridLayout()
+        wid = QWidget()
+        grid = QGridLayout()
 
 
         # setting the inner widget and layout
-        grid_inner = QtGui.QGridLayout(wid)
-        wid_inner = QtGui.QWidget(wid)
+        grid_inner = QGridLayout(wid)
+        wid_inner = QWidget(wid)
 
         # add the inner widget to the outer layout
         #grid.addWidget(wid_inner)
 
         # add tab frame to widget
-        wid_inner.tab = QtGui.QTabWidget(wid_inner)
+        wid_inner.tab = QTabWidget(wid_inner)
         grid_inner.addWidget(wid_inner.tab)
 
 
@@ -1075,7 +1100,7 @@ class MainWindow(QtGui.QMainWindow):
         grid.addWidget(wid_inner,0,0)
         grid.addWidget(self.hp,0,400)
         grid.addWidget(self.cp,400,400)
-        widget = QtGui.QWidget()
+        widget = QWidget()
         widget.setLayout(grid)
         self.setGeometry(0,0,800,400)
         self.move(250,50)
@@ -1108,12 +1133,12 @@ class MainWindow(QtGui.QMainWindow):
         elif number == 4:
             fname = "ev_4_config.txt"
         else:
-            fname = QtGui.QFileDialog.getOpenFileName(None, "Open File","Text files (*.txt)")
+            fname = QFileDialog.getOpenFileName(None, "Open File","Text files (*.txt)")
         self.controller.set_vel_type(number)
         try:
             index, list_ = con.create_config_list(fname)
         except IOError:
-            open_dlg = QtGui.QFileDialog.getOpenFileName(None, "Open File",filter = "Text files (*.txt)")
+            open_dlg = QFileDialog.getOpenFileName(None, "Open File",filter = "Text files (*.txt)")
             index, list_ = con.create_config_list(open_dlg.GetPath())
         self.controller.set_config_index(index)
         #print index
@@ -1125,9 +1150,9 @@ class MainWindow(QtGui.QMainWindow):
             self.controller.set_id_map(self.controller.make_id_map())
 
     def setupVelGrid(self):
-        grid = QtGui.QGridLayout()
-        label_font = QtGui.QFont("Helvetica", 12, QtGui.QFont.Bold)
-        label = QtGui.QLabel("Current Flash Status")
+        grid = QGridLayout()
+        label_font = QFont("Helvetica", 12, QFont.Bold)
+        label = QLabel("Current Flash Status")
         label.setFont(label_font)
         grid.addWidget(label, 0, 0, 1, 3, Qt.AlignCenter)
         grid.addWidget(self.bootloader.fixed_label, 1, 0)
@@ -1142,12 +1167,12 @@ class MainWindow(QtGui.QMainWindow):
         return grid
 
     def setupGfiGrid(self):
-        grid = QtGui.QGridLayout()
-        label_font = QtGui.QFont("Helvetica", 12, QtGui.QFont.Bold)
-        button_font = QtGui.QFont("Helvetica", 12)
-        label = QtGui.QLabel("RCD Board:")
+        grid = QGridLayout()
+        label_font = QFont("Helvetica", 12, QFont.Bold)
+        button_font = QFont("Helvetica", 12)
+        label = QLabel("RCD Board:")
         label.setFont(label_font)
-        button = QtGui.QPushButton("Program")
+        button = QPushButton("Program")
         button.setMinimumWidth(100)
         button.setMinimumHeight(40)
         button.setFont(button_font)
@@ -1159,7 +1184,7 @@ class MainWindow(QtGui.QMainWindow):
     def gfiButtonClicked(self):
         print ("Selecting RCD S19 to program")
         start_dir = 'C://' if not self.last_gfi_dir else self.last_gfi_dir
-        fname = QtGui.QFileDialog.getOpenFileName(None, 'Select RCD S19 File', start_dir)[0]
+        fname = QFileDialog.getOpenFileName(None, 'Select RCD S19 File', start_dir)[0]
         if fname:
             print ("S19 selected:")
             print (" " + str(fname))
@@ -1233,7 +1258,7 @@ class MainWindow(QtGui.QMainWindow):
         printMenu.addAction(printAction)
 
     def setupStatusBar(self):
-        self.status_label = QtGui.QLabel()
+        self.status_label = QLabel()
         self.statusBar().addPermanentWidget(self.status_label)
         self.updateStatusMessage()
 
@@ -1295,19 +1320,18 @@ class MainWindow(QtGui.QMainWindow):
     def closeEvent(self, event):
         if self.fixedinfo.config:
             msg = "Would you like to save the last fixed info configuration?"
-            reply = QtGui.QMessageBox.question(self, 'Save Prompt', msg, QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
-            if reply == QtGui.QMessageBox.Yes:
+            reply = QMessageBox.question(self, 'Save Prompt', msg, QMessageBox.Yes, QMessageBox.No)
+            if reply == QMessageBox.Yes:
                 self.fixedinfo.saveConfigFile()
         if self.controller.serial_connected():
              self.controller.switch_to_execute()
              self.controller.ser.close()
         event.accept()
 
-class NotebookTab(QtGui.QWidget):
-    def __init__(self, parent, page_index,edits):
-
-        super(NotebookTab, self).__init__(parent)       #wx.Panel.__init__(self, parent)
-        self.parent = parent # parent contains all the information needed in the controller
+class NotebookTab(QWidget):
+    def __init__(self, parent, page_index, edits):
+        super(NotebookTab, self).__init__(parent)  # Calls QWidget's constructor
+        self.parent = parent  # parent contains all the information needed in the controller
         self.page_index = page_index
         self.edits = edits
         self.initialize_new()
@@ -1316,62 +1340,70 @@ class NotebookTab(QtGui.QWidget):
         page = self.parent.controller.config_list[self.page_index]
         self.info_line_list = []
 
-        grid = QtGui.QGridLayout()
+        grid = QGridLayout()  # Use QGridLayout from PySide6.QtWidgets
 
-        widget = QtGui.QWidget()
-        #Layout of Container Widget
-        layout = QtGui.QVBoxLayout(self)
+        widget = QWidget()  # QWidget from PySide6.QtWidgets
+        # Layout of Container Widget
+        layout = QVBoxLayout(self)
 
-        for i in range(0, len(page)):
-            #self.field=page[i]
+        for i in range(len(page)):
             field = page[i]
-            self.info_line_list=AddInfo(self, grid, field,i,self.edits )
+            self.info_line_list = AddInfo(self, grid, field, i, self.edits)  # Assuming AddInfo is defined elsewhere
             layout.addWidget(self.info_line_list)
+
         widget.setLayout(layout)
 
-        scroll = QtGui.QScrollArea()
-        scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+        scroll = QScrollArea()  # QScrollArea from PySide6.QtWidgets
+        scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)  # Use Qt from PySide6.QtCore
         scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        scroll.setWidgetResizable(False)
+        scroll.setWidgetResizable(True)  # Set to True to resize the widget inside the scroll area
         scroll.setWidget(widget)
-        #Scroll Area Layer add
-        vLayout = QtGui.QVBoxLayout(self)
+
+        # Scroll Area Layer add
+        vLayout = QVBoxLayout(self)
         vLayout.addWidget(scroll)
         self.setLayout(vLayout)
 
 
 
 #The help panel on the StartFrame that displays the help text
-class HelpPanel(QtGui.QWidget):
+
+class HelpPanel(QWidget):
     def __init__(self, parent):
-        super(HelpPanel,self).__init__(parent)
+        super(HelpPanel, self).__init__(parent)
         self.parent = parent
-        bsize = QtGui.QVBoxLayout()
-        title = QtGui.QLabel('Help Information')
-        self.text_area = QtGui.QTextEdit()
+
+        # Create layout
+        bsize = QVBoxLayout()
+
+        # Create and add title label
+        title = QLabel('Help Information')
+        self.text_area = QTextEdit()
         self.text_area.setReadOnly(True)
+
+        # Add widgets to layout
         bsize.addWidget(title)
         bsize.addStretch(0)
         bsize.addWidget(self.text_area)
         bsize.addStretch(1)
-        self.setLayout(bsize)
-        self.show()
 
+        # Set the layout for this widget
+        self.setLayout(bsize)
 
     def setText(self, text):
         self.text_area.setText(text)
 
 #The control panel on the StartFrame that has the buttons for writing
-class ControlPanel(QtGui.QWidget):
+class ControlPanel(QWidget):
     def __init__(self, parent):
         super(ControlPanel,self).__init__(parent)
         self.parent = parent
-        self.title = QtGui.QLabel('Control Panel')
-        self.write_page = QtGui.QPushButton("Write One Page")
+        self.title = QLabel('Control Panel')
+        self.write_page = QPushButton("Write One Page")
         self.write_page.clicked.connect(self.OnClickPage)
-        self.write_all = QtGui.QPushButton("Write All Pages")
+        self.write_all = QPushButton("Write All Pages")
         self.write_all.clicked.connect(self.OnClickAll)
-        bsize = QtGui.QVBoxLayout()
+        bsize = QVBoxLayout()
         bsize.addWidget(self.title)
         bsize.addWidget(self.write_page)
         bsize.addWidget(self.write_all)
@@ -1386,7 +1418,7 @@ class ControlPanel(QtGui.QWidget):
         option = []
         for i in range(0, len(items)):
             option.append(str(items[i][0]))
-        item, ok = QtGui.QInputDialog.getItem(self, "QInputDialog.getItem()","Which page you want to save?", option, 0, False)
+        item, ok = QInputDialog.getItem(self, "QInputDialog.getItem()","Which page you want to save?", option, 0, False)
         if ok and item:
             current_page_text = item      #self.parent.controller.config_index[self.parent.nb.GetCurrentPage().page_index][0]
         #Include a dlg box allowing user to cancel action
@@ -1399,14 +1431,14 @@ class ControlPanel(QtGui.QWidget):
                     string += "Fault at id: (" + fault[0] + ") | " + self.parent.controller.fault_messages[int(fault[1])] + '\n'
                 else:
                     string = fault
-            dlg = QtGui.QMessageBox.information(self, 'Fault', ''' Faults On Page''',QMessageBox.Ok)
+            dlg = QMessageBox.information(self, 'Fault', ''' Faults On Page''',QMessageBox.Ok)
             #dlg = wx.MessageDialog(self, string, "Faults On Page", wx.OK | wx.ICON_WARNING)
             dlg.ShowModal()
             dlg.Destroy()
         else:
             #reply = QtGui.QMessageBox.information(self,"QMessageBox.information()", Dialog.MESSAGE)
             #dlg = QtGui.QMessageBox.information(self, 'Info Message', ''' Info Message Box''',QMessageBox.Ok)
-            QtGui.QMessageBox.information(self, "Page Written", "Current page written successfully!",QtGui.QMessageBox.Ok)
+            QMessageBox.information(self, "Page Written", "Current page written successfully!",QMessageBox.Ok)
             #dlg = wx.MessageDialog(self, "Current page written successfully!", "Page Written", wx.OK | wx.ICON_INFORMATION)
             #dlg.ShowModal()
             #dlg.close()
@@ -1426,15 +1458,15 @@ class ControlPanel(QtGui.QWidget):
                     string += "\nNOTE: Pages without faults were written correctly"
                 else:
                     string = fault
-            QtGui.QMessageBox.information(self, "Faults", "Faults on Pages",QtGui.QMessageBox.Ok)
+            QMessageBox.information(self, "Faults", "Faults on Pages",QMessageBox.Ok)
             print (faults)
         else:
-            QtGui.QMessageBox.information(self, "All Pages Written", "All pages written successfully!",QtGui.QMessageBox.Ok)
+            QMessageBox.information(self, "All Pages Written", "All pages written successfully!",QMessageBox.Ok)
 
 
 
 
-class AddInfo(QtGui.QWidget):
+class AddInfo(QWidget):
 
 
 
@@ -1444,12 +1476,12 @@ class AddInfo(QtGui.QWidget):
         self.edits = edits
         self.itemindex = i
 
-        label1 = QtGui.QLabel(field[1] + '(' + field[0] + ')', self)
+        label1 = QLabel(field[1] + '(' + field[0] + ')', self)
 
         if field[con.ConfigFields.TYPE] is int:
             if field[con.ConfigFields.VALUE] is None:
                 field[con.ConfigFields.VALUE] = str('')
-            self.tc =QtGui.QLineEdit(str(field[con.ConfigFields.VALUE]))  #wx.lib.intctrl.IntCtrl(self.parent, -1, field[con.ConfigFields.VALUE], pos=(x+220, y-3), size=(200, -1), allow_none=True)
+            self.tc = QLineEdit(str(field[con.ConfigFields.VALUE]))  #wx.lib.intctrl.IntCtrl(self.parent, -1, field[con.ConfigFields.VALUE], pos=(x+220, y-3), size=(200, -1), allow_none=True)
             grid.addWidget(label1, i, 0)
             grid.addWidget(self.tc, i, 1)
             self.edits.append(self.tc)
@@ -1464,7 +1496,7 @@ class AddInfo(QtGui.QWidget):
         else:
             if field[con.ConfigFields.VALUE] is None:
                 field[con.ConfigFields.VALUE] = ""
-            self.tc =  QtGui.QLineEdit(str(field[con.ConfigFields.VALUE]))#self.tc = wx.TextCtrl(self.parent, -1, str(field[con.ConfigFields.VALUE]), pos=(x+220, y-3), size=(200, -1))
+            self.tc =  QLineEdit(str(field[con.ConfigFields.VALUE]))#self.tc = wx.TextCtrl(self.parent, -1, str(field[con.ConfigFields.VALUE]), pos=(x+220, y-3), size=(200, -1))
             grid.addWidget(label1, i, 0)
             grid.addWidget(self.tc, i, 1)
             self.edits.append(self.tc)
@@ -1483,7 +1515,7 @@ class AddInfo(QtGui.QWidget):
     def new_value(self):
         i = self.parent.page_index
         j = self.itemindex
-        self.parent.parent.controller.config_list[i][j][5] = unicode(self.tc.text())
+        self.parent.parent.controller.config_list[i][j][5] = str(self.tc.text())
 
 
 
@@ -1541,7 +1573,7 @@ class AddInfo(QtGui.QWidget):
 def main():
     app = QApplication(sys.argv)
     ex = MainWindow()
-    sys.exit(app.exec_())
+    sys.exit(app.exec())
 
 if __name__ == '__main__':
     main()

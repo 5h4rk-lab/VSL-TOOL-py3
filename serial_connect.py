@@ -82,7 +82,7 @@ def connect_to_port(port_name):
     try:
         ser = serial.Serial(full_port_name(port_name), 115200, timeout=0.05, xonxoff=True)
         return ser
-    except SerialException, e:
+    except SerialException as e:
         logging.warning("Failed to open serial port")
         return None
     logging.warning("Selected serial port not available")
