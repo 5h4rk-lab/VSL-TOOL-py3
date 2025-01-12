@@ -484,18 +484,18 @@ class VelCodeComponent(FormComponent):
         self.btn.clicked.connect(self.buttonClicked)
 
     def buttonClicked(self):
-        print "Selecting vel S19 to program"
+        print ("Selecting vel S19 to program")
         start_dir = 'C://' if not self.last_dir else self.last_dir
         fname = QtGui.QFileDialog.getOpenFileName(None, 'Select VEL S19 File', start_dir)[0]
         if fname:
-            print "S19 selected:"
-            print " " + str(fname)
+            print ("S19 selected:")
+            print (" " + str(fname))
             self.setDetected(False)
             self.last_dir = fname
-            print "Switching to bootloader"
+            print ("Switching to bootloader")
             if self.serial.switchToBootloader():
                 self.serial.ser.flushInput()
-                print "Sending an 'a' (erase & program) to bootloader"
+                print("Sending an 'a' (erase & program) to bootloader")
                 self.serial.ser.write('a')
                 found, tags = self.serial.waitForResponse( \
                     desired_tag=Messages.ERASED_SUCCESSFULLY, \
@@ -507,19 +507,19 @@ class VelCodeComponent(FormComponent):
                             timeout=1, max_length=10000)
             self.checkForVelCode()
         else:
-            print "No S19 selected \n"
+            print("No S19 selected \n")
 
     def enable(self):
         super(VelCodeComponent, self).enable()
         self.checkForVelCode()
 
     def checkForVelCode(self):
-        print "Checking for vel code"
+        print ("Checking for vel code")
         if self.serial.switchToVel():
-            print "Vel code detected \n"
+            print ("Vel code detected \n")
             self.setDetected(True)
         else:
-            print "Vel code not detected \n"
+            print( "Vel code not detected \n")
             self.setDetected(False)
 
 
@@ -546,7 +546,7 @@ class ProgrammerExecutable(object):
 
     def checkForExecutable(self):
         txt = "VEL" if self.vel else "RCD"
-        print "Searching for " + txt + " programmer executable"
+        print ("Searching for " + txt + " programmer executable")
         self.found = False
 
         if os.sys.platform.startswith("win"):
@@ -557,10 +557,10 @@ class ProgrammerExecutable(object):
                     asubkey=OpenKey(aReg,aKey)
                     val=QueryValueEx(asubkey, "InstallationDirectory")[0]
                     self.found = True
-                    print "Found"
+                    print ("Found")
                     break;
                 except EnvironmentError:
-                    print "Checking next key"
+                    print("Checking next key")
             if self.vel:
                 self.path = os.path.join(val,"HCS12_FlashProgrammer.exe")
             else:
@@ -580,37 +580,37 @@ class ProgrammerExecutable(object):
             #        print " " + self.path + "\n"
         else:
             #linux mac
-            print "No USBDM Linux or Mac support Yet "
+            print("No USBDM Linux or Mac support Yet ")
 
     def selectExecutable(self):
         txt = "VEL" if self.vel else "RCD"
-        print "User is selecting " + txt + " programmer executable"
+        print ("User is selecting " + txt + " programmer executable")
         start_dir = 'C://' if not self.path else self.path
         fname = QtGui.QFileDialog.getOpenFileName(None, 'Select Programmer Executable', start_dir)[0]
         if fname:
             self.path = str(fname)
             self.found = True
-            print "Executable selected: "
-            print " " + self.path + "\n"
+            print ("Executable selected: ")
+            print (" " + self.path + "\n")
             self.statusChanged()
         else:
-            print "No executable selected \n"
+            print ("No executable selected \n")
 
     def vel_execute(self, s19_file):
         try:
             #print subprocess.check_output([self.path,s19_file,'-device=MC9S12XEP100','-unsecure','-masserase','-program','-execute'])\
-            print subprocess.check_output([self.path,s19_file,'-device=MC9S12XEP100','-erase=selective','-program','-execute'])
-            print "Finished programming \n"
+            print(subprocess.check_output([self.path,s19_file,'-device=MC9S12XEP100','-erase=selective','-program','-execute']))
+            print("Finished programming \n")
         except Exception, e:
-            print "Error trying to execute programmer executable"
+            print("Error trying to execute programmer executable")
             QtGui.QMessageBox.critical(None, 'Programmer executable failed', '%s' % (e))
 
     def gfi_execute(self, s19_file):
         try:
-            print subprocess.check_output([self.path,s19_file,'-device=MC9S08SH4','-trim=33.6','-nvloc=FFAE','-secure','-masserase','-program','-execute'])
-            print "Finished programming \n"
+            print(subprocess.check_output([self.path,s19_file,'-device=MC9S08SH4','-trim=33.6','-nvloc=FFAE','-secure','-masserase','-program','-execute']))
+            print("Finished programming \n")
         except Exception, e:
-            print "Error trying to execute programmer executable"
+            print("Error trying to execute programmer executable")
             QtGui.QMessageBox.critical(None, 'Programmer executable failed', '%s' % (e))
 
 ###
@@ -627,15 +627,15 @@ class LabelPrinter(object):
 
     def establishConnection(self, ip_address=None, suppress_error=False):
         if not ip_address:
-            print "User is entering an ip address for the label printer"
+            print("User is entering an ip address for the label printer")
             text, ok = QtGui.QInputDialog.getText(None, 'Connect to Printer', 'Enter printer ip address:', text=self.ip)
             if text and ok:
                 self.ip = text
                 ip_address = text
             else:
-                print "No ip address entered; aborting connection attempt \n"
+                print("No ip address entered; aborting connection attempt \n")
         if ip_address:
-            print "Trying to connect to printer at IP address " + ip_address
+            print("Trying to connect to printer at IP address " + ip_address)
             try:
                 f_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 f_socket.settimeout(1)
@@ -644,30 +644,30 @@ class LabelPrinter(object):
                 self.printer.template_mode()
                 self.printer.template_init()
                 self.printer.choose_template(self.template)
-                print "Succesful connection to printer \n"
+                print("Succesful connection to printer \n")
             except Exception, e:
-                print "Error connecting to the printer at the given ip \n"
+                print("Error connecting to the printer at the given ip \n")
                 if not suppress_error:
                     QtGui.QMessageBox.critical(None, 'Could Not Connect To Printer', '%s' % (e))
 
     def changeTemplate(self):
-        print "User is entering a new template number"
+        print("User is entering a new template number")
         text, ok = QtGui.QInputDialog.getText(None, 'Change Template', 'Enter new template number:', text=str(self.template))
         if text and ok:
             try:
                 self.template = int(text)
                 if self.printer:
                     self.printer.choose_template(self.template)
-                print "Template number has been changed to " + text + "\n"
+                print( "Template number has been changed to " + text + "\n")
             except ValueError:
-                print "Value entered is not a valid number, not changing template \n"
+                print("Value entered is not a valid number, not changing template \n")
         else:
             "Nothing entered, not changing template \n"
 
     def printLabel(self, serial_num):
         "User would like to print label"
         if not self.printer:
-            print "Cannot print label; do not have a connection to the printer \n"
+            print( "Cannot print label; do not have a connection to the printer \n")
             QtGui.QMessageBox.critical(None, 'Printing Error', 'No connection to the printer')
         else:
             today = datetime.datetime.today()
@@ -675,12 +675,12 @@ class LabelPrinter(object):
             self.printer.select_and_insert('sn', serial_num)
             self.printer.select_and_insert('date', date)
             self.printer.template_print()
-            print "I think I printed a label. Do you think I printed a label? \n"
+            print ("I think I printed a label. Do you think I printed a label? \n")
 
     def printTestLabel(self):
         "User would like to print a test label"
         if not self.printer:
-            print "Cannot print test label; do not have a connection to the printer \n"
+            print ("Cannot print test label; do not have a connection to the printer \n")
             QtGui.QMessageBox.critical(None, 'Printing Error', 'No connection to the printer')
         else:
             today = datetime.datetime.today()
@@ -688,7 +688,7 @@ class LabelPrinter(object):
             self.printer.select_and_insert('sn', 'TESTING')
             self.printer.select_and_insert('date', date)
             self.printer.template_print()
-            print "Test label sent to printer. Did it print? \n"
+            print ("Test label sent to printer. Did it print? \n")
 
 ###
 # Customized tab widget
@@ -716,7 +716,7 @@ class MainWindow(QtGui.QMainWindow):
 
     def __init__(self):
         super(MainWindow, self).__init__()
-        print "Initializing.. \n"
+        print ("Initializing.. \n")
         self.controller = con.Controller()
         self.initComponents()
         self.initUI()
@@ -816,7 +816,7 @@ class MainWindow(QtGui.QMainWindow):
 
         dlg = QtGui.QFileDialog.DontResolveSymlinks | QtGui.QFileDialog.ShowDirsOnly
         directory = QtGui.QFileDialog.getExistingDirectory()
-        print 'selected_directory:', directory
+        print ('selected_directory:', directory)
         unrecognized_lists = self.controller.populate_from_save_dir(directory.replace('\\', '/'))
         # Check if the folder had any .dflash files
         if unrecognized_lists == []:
@@ -829,20 +829,20 @@ class MainWindow(QtGui.QMainWindow):
                     temp = self.tabs[j]
                     self.tabs[j] = self.tabs[j+1]
                     self.tabs[j+1] = temp
-        print self.tabs
+        print (self.tabs)
         for i, tab in enumerate(self.tabs):
             self.lineEdits = tab.info_line_list.findChildren(QtGui.QLineEdit)
-            print self.lineEdits
+            print (self.lineEdits)
             for j,line in enumerate(self.lineEdits):
                 line.setText(unicode(self.controller.config_list[i+1][j][con.ConfigFields.VALUE]))
-                print line.setText
+                print (line.setText)
 
 
     def onWriteSave(self):
         #create a new empty folder before you choose directory, and then save it in the folder you found
         dlg = QtGui.QFileDialog.DontResolveSymlinks | QtGui.QFileDialog.ShowDirsOnly
         directory = QtGui.QFileDialog.getExistingDirectory()
-        print 'selected_directory:', directory
+        print ('selected_directory:', directory)
 
         msgBox = QtGui.QMessageBox(QtGui.QMessageBox.Warning,
                 "QMessageBox.warning()", "Do you really want to save the latest data?",
@@ -863,7 +863,7 @@ class MainWindow(QtGui.QMainWindow):
         pass
 
     def OnClose(self):
-        print "closing"
+        print ("closing")
         if self.controller.serial_connected():
             self.controller.switch_to_execute()
             self.controller.ser.close()
