@@ -30,7 +30,7 @@ from event import *
 from serial_connection import *
 from messages import *
 from crc import *
-import StringIO
+import io
 import dflash_controller as con
 import serial_connect as sc
 import sys
@@ -344,9 +344,9 @@ class FixedInformationDialog(QtGui.QDialog):
                                          readonly=False)
             if dlg.exec_():
                 my_dict = dlg.lineEdit_dictionary
-                data = StringIO.StringIO()
+                data = io.StringIO()
                 for key, value in my_dict.iteritems():
-                    value = unicode(value.text()).encode("utf8")
+                    value = value.text.encode("utf-8")
                     fixed_info_config.updateValue(key, value)
                     data.write(key[:2])
                     data.write(value)
@@ -362,11 +362,11 @@ class FixedInformationDialog(QtGui.QDialog):
     @staticmethod
     def readFixedInformation(fixed_info_dictionary):
         if fixed_info_dictionary:
-            print "Fixed information dialog opening in read only mode"
+            print("Fixed information dialog opening in read only mode")
             dlg = FixedInformationDialog(dictionary=fixed_info_dictionary,
                                          readonly=True)
             dlg.exec_()
-            print "Fixed information dialog closed \n"
+            print("Fixed information dialog closed \n")
 
 ###
 # Typedef for a named tuple representing a fixed information category
@@ -385,23 +385,23 @@ class FixedInformationConfig(object):
         self.parseFile()
 
     def parseFile(self):
-        print "Attempting to parse xml config file"
+        print("Attempting to parse xml config file")
         tree = xml.etree.ElementTree.parse(self.fname)
         root = tree.getroot()
-        print "Trying to include any xinclude data (external serial number file)"
+        print("Trying to include any xinclude data (external serial number file)")
         try:
             xml.etree.ElementInclude.include(root)
-            print " xinclude successful"
+            print( " xinclude successful")
         except Exception:
-            print " xinclude failed"
-        print "Looping through xml file to create categories"
+            print (" xinclude failed")
+        print ("Looping through xml file to create categories")
         for category in root.findall('category'):
             title = category.find('title').text if category.find('title').text else ''
             identifier = category.find('identifier').text if category.find('identifier').text else ''
             default = category.find('default').text if category.find('default').text else ''
             self.list_of_categories.append(FixedInformationCategory(title.strip(),identifier.strip(),default.strip()))
-            print "Creating category: title=" + title + ", identifier=" + identifier + ", default=" + default
-        print "Finished parsing xml file \n"
+            print ("Creating category: title=" + title + ", identifier=" + identifier + ", default=" + default)
+        print ("Finished parsing xml file \n")
 
     def updateValue(self, identifier, new_val):
         old = self.list_of_categories.pop([c.identifier for c in self.list_of_categories].index(identifier))
@@ -415,24 +415,24 @@ class FixedInformationConfig(object):
 
     def autoIncrement(self, last_serial_num):
         self.last_serial_num = last_serial_num
-        print "Auto-increment serial number? Last serial number = " + last_serial_num
+        print ("Auto-increment serial number? Last serial number = " + last_serial_num)
         if AUTO_INCREMENT:
-            print "Attempting to auto-increment"
+            print ("Attempting to auto-increment")
             try:
                 split_ser = re.match(r"([a-z]+)([0-9]+)", last_serial_num, re.I)
                 txt = split_ser.group(1)
                 num = split_ser.group(2)
                 new_serial_num = txt + str(int(num) + 1).zfill(len(num))
-                print "Auto-increment successful. New serial number = " + new_serial_num + "\n"
+                print("Auto-increment successful. New serial number = " + new_serial_num + "\n")
                 f = open(os.path.join(os.path.dirname(self.fname),"serial_number.txt"), 'w')
                 f.write(new_serial_num)
                 f.close()
                 return new_serial_num
             except Exception:
-                print "Failed to increment serial number \n"
+                print ("Failed to increment serial number \n")
                 return last_serial_num
         else:
-            print "Auto-increment is disabled. Leaving serial number alone. \n"
+            print("Auto-increment is disabled. Leaving serial number alone. \n")
             return last_serial_num
 
     def writeFile(self, fname):

@@ -4,7 +4,7 @@ import serial
 import re
 #import serial.tools.list_ports as serial_ports
 from serial.serialutil import SerialException
-import StringIO
+import io
 
 import logging
 
@@ -300,7 +300,7 @@ def format_dict_to_string(dictionary):
     Input: takes in a dictionary of id's (key) and information (value) and formats
            the data to be written to the board
     """
-    data = StringIO.StringIO()
+    data = io.StringIO()
     for key, value in dictionary.iteritems():
         value = str(value).encode("utf-8")
         data.write(key[:2])
