@@ -1,9 +1,5 @@
 #!/usr/bin/python2.7
 #--coding:utf-8 --
-
-#TODO: update the python3 syntax
-
-
 import os
 import sys
 import glob
@@ -17,7 +13,6 @@ import subprocess
 import re
 import time
 # import _winreg as winreg
-#TODO: update it from qt4 to qt6
 import itertools
 from PySide6 import QtGui, QtWidgets
 from PySide6.QtGui import QFont
@@ -48,7 +43,6 @@ if os.sys.platform.startswith("win"):
 AUTO_INCREMENT = True
 PRINTER_IP = '10.0.1.80'
 DEFAULT_PRINTER_TEMPLATE = 1
-#TODO: find what are these?
 STX = "\x02"
 ETB = "\x17"
 ETX = "\x03"
@@ -60,8 +54,6 @@ VEL_MODE = True
 ###
 # Class that groups together two labels and a button
 ###
-
-#TODO: change event to Signals
 
 class FormComponent(object):
     detected = False
@@ -1580,7 +1572,10 @@ class AddInfo(QWidget):
 def main():
     app = QApplication(sys.argv)
     ex = MainWindow()
-    sys.exit(app.exec())
+    ex.show()
+    exit_code = app.exec()
+    sys.exit(exit_code)
+
 
 if __name__ == '__main__':
     main()
