@@ -767,7 +767,8 @@ class MainWindow(QMainWindow):
         self.bootloader.detectedChanged += self.formChangeHandler
         self.fixedinfo.detectedChanged += self.formChangeHandler
         self.velcode.detectedChanged += self.formChangeHandler
-        self.hp = HelpPanel(self)
+        #self.hp = HelpPanel(self)
+        self.hp = None
         self.cp = ControlPanel(self)
 
 
@@ -779,6 +780,14 @@ class MainWindow(QMainWindow):
         self.resize(500, 200)
         self.center()
         self.setWindowTitle('VEL Programmer')
+    # # Debugging code to find the source of "Help Information"
+    #     print("Debugging QLabel instances:")
+    #     for label in self.findChildren(QLabel):
+    #         print("Found QLabel:", label.text(), "Parent:", label.parent())
+
+    #     print("Debugging Menu Bar actions:")
+    #     for action in self.menuBar().actions():
+    #         print("Menu bar action:", action.text())       
         self.show()
 
     def initDFL(self):
@@ -1101,7 +1110,9 @@ class MainWindow(QMainWindow):
 
 
     def setup_help_panel(self):
-        self.hp = HelpPanel(self)
+        if not self.hp:  # If the HelpPanel is not already created
+            self.hp = HelpPanel(self)
+        self.hp.show()
 
     def setup_control_panel(self):
         self.cp = ControlPanel(self)
@@ -1365,14 +1376,11 @@ class HelpPanel(QWidget):
         super(HelpPanel, self).__init__(parent)
         self.parent = parent
 
-        # Explicitly set the window title to avoid unintended behavior
-        self.setWindowTitle("Help Panel")  # Or use the application name
-
         # Create layout
         bsize = QVBoxLayout()
 
-        # Create and add the title label
-        title = QLabel('Help Information')  # This stays as a label inside the widget
+        # Create and add title label
+        title = QLabel('Help Information')  # This will stay inside the panel
         self.text_area = QTextEdit()
         self.text_area.setReadOnly(True)
 
@@ -1384,9 +1392,6 @@ class HelpPanel(QWidget):
 
         # Set the layout for this widget
         self.setLayout(bsize)
-
-        # Display the widget
-        self.show()
 
     def setText(self, text):
         self.text_area.setText(text)
@@ -1558,7 +1563,7 @@ class AddInfo(QWidget):
         return message
 
     def HelpMessages(self, info):
-        def OnSetFocus(event):
+        def OnSetFocus():
             self.GetGrandParent().GetGrandParent().hp.setText(self.generate_help_message(info))
         return OnSetFocus
 
