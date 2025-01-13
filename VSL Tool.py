@@ -1373,15 +1373,18 @@ class HelpPanel(QWidget):
         super(HelpPanel, self).__init__(parent)
         self.parent = parent
 
+        # Explicitly set the window title to avoid unintended behavior
+        self.setWindowTitle("Help Panel")  # Or use the application name
+
         # Create layout
         bsize = QVBoxLayout()
 
-        # Create and add title label
-        title = QLabel('Help Information')
+        # Create and add the title label
+        title = QLabel('Help Information')  # This stays as a label inside the widget
         self.text_area = QTextEdit()
         self.text_area.setReadOnly(True)
 
-        # Add widgets to layout
+        # Add widgets to the layout
         bsize.addWidget(title)
         bsize.addStretch(0)
         bsize.addWidget(self.text_area)
@@ -1390,8 +1393,12 @@ class HelpPanel(QWidget):
         # Set the layout for this widget
         self.setLayout(bsize)
 
+        # Display the widget
+        self.show()
+
     def setText(self, text):
         self.text_area.setText(text)
+
 
 #The control panel on the StartFrame that has the buttons for writing
 class ControlPanel(QWidget):

@@ -1,0 +1,28 @@
+Format: A page is denoted by starting a line with 3 colons
+Example page
+<3Colons>PageTitle, DFLash Page Number
++id; a plus signifies adding a new field, it is followed by a 2 character identifier (in rare cases, 3 characters for a value which needs multiple fields)
+title; the semi-colon ends the information for the line so comments can be put in
+type; if no semi-colon was present, then the whole line is considered usable information
+range, range value 1, ..., range value n; outside spaces will be parsed
+	help text; tabs and spaces will be removed before the value
+default value;
+mandatory; True or False
+
+:::EVSE Electrical, 3
++eb; I can add comments after the semicolon, but if I don't use a semicolon, the whole line will be used
+Electrician Badge; NOTE-Do not use enter to format text
+string; 
+length, 20; 
+The id or badge of the electrical inspector entering these values;
+None; The default value for a stand-alone semi-colon is None. Do not use a blank line.
+False; The mandatory value for a stand-alone semi-colon is False.
+AFTER THE LAST VALUE HAS BEEN ADDED, extra lines will not do anything until another page or field is found
+
++ad1;
+Address Line 1;
+string;
+; The range value with a stand-alone semi-colon defaults to None
+Address line 1 of the postal address of this EVSE;
+; The default value with a stand-alone semi-colon defaults None. Do not use a blank line.
+; The mandatory value with a stand-alone semi-colon is False.
