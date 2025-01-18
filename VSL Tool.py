@@ -1099,7 +1099,7 @@ class MainWindow(QMainWindow):
         wid_inner.setLayout(grid_inner)
 
         grid.addWidget(wid_inner,0,0)
-        grid.addWidget(self.hp,0,400)
+        #grid.addWidget(self.hp,0,400)
         grid.addWidget(self.cp,400,400)
         widget = QWidget()
         widget.setLayout(grid)
