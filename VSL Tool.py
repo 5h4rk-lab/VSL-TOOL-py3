@@ -499,7 +499,7 @@ class FixedInformationConfig(object):
             root.append(cat)
         cat.tail = "\n"
         f = open(fname, 'w')
-        xml.etree.ElementTree.ElementTree(root).write(f)
+        xml.etree.ElementTree.ElementTree(root).write(f, encoding='utf-8')
         f.close()
 
 ###
