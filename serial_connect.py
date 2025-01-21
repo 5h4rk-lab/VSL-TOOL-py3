@@ -172,7 +172,7 @@ def switch_to_bootloader(ser):
         ser.flushInput()
         ser.write(b'\r')
         responded, tags = wait_for_response(ser, desired_tag=Messages.MAIN_MENU)
-        i - 1
+        i -= 1
     return (responded)
 
 
