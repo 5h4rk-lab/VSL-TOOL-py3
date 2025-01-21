@@ -267,7 +267,7 @@ class Controller(object):
         Output: updates the config_list, returns a list of unrecognized keys
         """
         unrecognized = []
-        for key, value in dictionary.iteritems():
+        for key, value in dictionary.items():
             if (key == 'ad') and (value is not None): #Update the address fields
                 self.split_address(key, value)
             elif key in self.id_map:

@@ -198,7 +198,7 @@ class FixedInfoComponent(FormComponent):
         if self.serial.switchToBootloader():
             self.serial.ser.flushInput()
             print("Sending a 'c' to bootloader to read fixed information")
-            self.serial.ser.write('cFF')
+            self.serial.ser.write('cFF'.encode('utf-8'))  # Encoding string to bytes
             found, _ = self.serial.waitForResponse(
                 desired_tag=Messages.DFLASH_DATA)
             if found:
@@ -228,7 +228,7 @@ class FixedInfoComponent(FormComponent):
                 while response[block_start] != ETB:
                     block_end = response.find(LINE_FEED,block_start)
                     key = response[block_start:block_start+2]
-                    value = response[block_start+2:block_end].decode("utf8")
+                    value = response[block_start+2:block_end]
                     dictionary[key] = value
                     block_start = block_end+1
         return dictionary
@@ -278,7 +278,7 @@ class FixedInfoComponent(FormComponent):
         if self.serial.switchToBootloader():
             self.serial.ser.flushInput()
             print("Sending a 'c' to bootloader to read fixed information")
-            self.serial.ser.write('cFF')
+            self.serial.ser.write('cFF'.encode('utf-8'))  # Encoding string to bytes
             # self.serial.ser.write('\x00')
             found, _ = self.serial.waitForResponse(
                 desired_tag=Messages.DFLASH_DATA, max_length=1000)

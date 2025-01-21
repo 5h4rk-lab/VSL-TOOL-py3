@@ -2,7 +2,7 @@
 import time
 import serial
 import re
-import serial.tools.list_ports as serial_ports
+#import serial.tools.list_ports as serial_ports
 from serial.serialutil import SerialException
 import io
 
@@ -46,7 +46,7 @@ def enumerate_serial_ports():
     """
     Yields the ports
     """
-    for port, desc, hw_id in serial_ports.comports():
+    for port, desc, hw_id in serial.tools.list_ports.comports():
         yield port
 
 
@@ -115,10 +115,14 @@ def wait_for_response(ser, msg=None, desired_tag=None, timeout=0.1, max_length=5
 
     while (not found_response) and (not exceeded_timeout) and (not exceeded_max_length):
         while (ser.inWaiting() > 0) and (not exceeded_max_length):
+            print ("here 20")
             char = ser.read(1)  # read one character
-            response += char  # add the character to the response
+            print(char)
+            response += char.decode('utf-8')  # add the character to the response
+            print(response)
+            print("here 21")
             count += 1
-            if (char == '\n'):  # if our character is a newline
+            if (char == b'\n'):  # if our character is a newline
                 if (desired_tag):  # if desired_tag was given as a parameter
                     for curr_re in OUTPUT_RES:
                         parsed = curr_re.search(response)
@@ -141,11 +145,14 @@ def wait_for_response(ser, msg=None, desired_tag=None, timeout=0.1, max_length=5
             if count > max_length:
                 exceeded_max_length = True
         elapsed_time = time.time() - start_time
+        #print(elapsed_time)
         if elapsed_time > timeout:
+            print("here 22")
             exceeded_timeout = True
     logging.info(response)
     logging.info("Correct response: " + str(found_response))
     logging.debug("Response took %0.2f seconds (timeout=%f)" % (elapsed_time, exceeded_timeout))
+    print("here 23")
     return (found_response, messages)
 
 
@@ -159,28 +166,29 @@ def switch_to_bootloader(ser):
     ser.flushOutput()
     ser.flushInput()
     logging.debug("Sending carriage return, seeing if bootloader responds")
-    ser.write('\r')
+    ser.write(b'\r')
     responded, tags = wait_for_response(ser, desired_tag=Messages.MAIN_MENU)
     i = 3  # try 3 times in case green board is sleeping 
     while (not responded) and (i > 0):
         logging.debug("Didn't respond, sending '*1#' over serial")
         ser.flushInput()
-        ser.write("*1#")
+        ser.write(b"*1#")
         time.sleep(.5)
         ser.flushInput()
-        ser.write('\r')
+        ser.write(b'\r')
         responded, tags = wait_for_response(ser, desired_tag=Messages.MAIN_MENU)
-        i - 1
+        i -= 1
+        print(i)
     return (responded)
 
 
 def switch_to_program_execute(ser):
     if switch_to_bootloader(ser):
         ser.flushInput()
-        ser.write('d')
-        print ("success")
+        ser.write(b'd')
+        print("success")
     else:
-        print ("STILL IN BOOTLOADER, SWITCH TO PROGRAM FROM TERA TERM")
+        print("STILL IN BOOTLOADER, SWITCH TO PROGRAM FROM TERA TERM")
 
 def serial_is_open(ser):
     """
@@ -201,9 +209,9 @@ def check_fixed_info_written(ser, page_number):
     """
     ser.flushInput()
     if page_number == 'ff':
-        ser.write('cff')
+        ser.write(b'cff')
     else:
-        ser.write('c%02X' % page_number)
+        ser.write(b'c%02X' % page_number)
     found, tags = wait_for_response(ser, desired_tag=Messages.DFLASH_DATA, max_length=65536)
     if found:
         return found.text
@@ -242,7 +250,7 @@ def validate_crc(response):
     stx_pos = response.find(STX)
     etb_pos = response.find(ETB)
     etx_pos = response.find(ETX)
-    print (stx_pos, etb_pos, etx_pos)
+    print(stx_pos, etb_pos, etx_pos)
     crc_valid_p = False
     if (stx_pos >= 0) and (etb_pos >= 0) and (etx_pos >= 0):
         if int(response[etb_pos+1], 16) == HASH_METHOD:
@@ -263,7 +271,7 @@ def create_fixed_info_dict(response):
     while response[block_start] != ETB:
         block_end = response.find(LINE_FEED, block_start)
         key = response[block_start:block_start+2]
-        value = response[block_start+2:block_end].decode("utf8")
+        value = response[block_start+2:block_end]
         if value != "":
             dictionary[key] = value
         block_start = block_end + 1
@@ -302,7 +310,7 @@ def format_dict_to_string(dictionary):
     """
     data = io.StringIO()
     for key, value in dictionary.iteritems():
-        value = str(value).encode("utf8")
+        value = str(value).encode("utf-8")
         data.write(key[:2])
         data.write(value)
         data.write(LINE_FEED)
@@ -329,7 +337,7 @@ def write_to_VEL(ser, page_number, formatted_string):
         logging.info("Sending fixed information...")
         logging.info(print_fixed_info(formatted_string))
         for char in formatted_string:
-            ser.write(char)
+            ser.write(char.encode())
             time.sleep(.001)
         return True
     else: #optional
