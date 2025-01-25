@@ -581,16 +581,20 @@ class ProgrammerExecutable(object):
 
         if os.sys.platform.startswith("win"):
             aKeys = [r"SOFTWARE\pgo\USBDM", r"SOFTWARE\Wow6432Node\pgo\USBDM"]
+            val = None
             for aKey in aKeys:
                 try:
                     aReg = ConnectRegistry(None,HKEY_LOCAL_MACHINE)
                     asubkey=OpenKey(aReg,aKey)
                     val=QueryValueEx(asubkey, "InstallationDirectory")[0]
                     self.found = True
-                    print ("Found")
+                    print ("Found the installation directory")
                     break;
                 except EnvironmentError:
                     print("Checking next key")
+            if val is None:
+                print("Error: Installation directory not found.")
+                return  # Exit the function safely
             if self.vel:
                 self.path = os.path.join(val,"HCS12_FlashProgrammer.exe")
             else:
