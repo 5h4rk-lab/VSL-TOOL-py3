@@ -589,12 +589,12 @@ class ProgrammerExecutable(object):
                     val=QueryValueEx(asubkey, "InstallationDirectory")[0]
                     self.found = True
                     print ("Found the installation directory")
-                    break;
+                    break
                 except EnvironmentError:
                     print("Checking next key")
             if val is None:
                 print("Error: Installation directory not found.")
-                return  # Exit the function safely
+                sys.exit(1)  # Exit the function safely
             if self.vel:
                 self.path = os.path.join(val,"HCS12_FlashProgrammer.exe")
             else:
