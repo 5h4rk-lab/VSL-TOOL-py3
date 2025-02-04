@@ -772,7 +772,7 @@ class MainWindow(QMainWindow):
         self.fixedinfo.detectedChanged += self.formChangeHandler
         self.velcode.detectedChanged += self.formChangeHandler
         #self.hp = HelpPanel(self)
-        self.hp = None
+        #self.hp = None
         self.cp = ControlPanel(self)
 
 
@@ -1073,6 +1073,7 @@ class MainWindow(QMainWindow):
     def second_window(self):
 
 
+
         wid = QWidget()
         grid = QGridLayout()
 
@@ -1103,7 +1104,8 @@ class MainWindow(QMainWindow):
         wid_inner.setLayout(grid_inner)
 
         grid.addWidget(wid_inner,0,0)
-        #grid.addWidget(self.hp,0,400)
+        self.hp = HelpPanel(self)
+        grid.addWidget(self.hp,0,400)
         grid.addWidget(self.cp,400,400)
         widget = QWidget()
         widget.setLayout(grid)
@@ -1111,12 +1113,14 @@ class MainWindow(QMainWindow):
         self.move(250,50)
         self.setCentralWidget(widget)
         self.show()
+    # def setup_help_panel(self):
+    #     if not self.hp:  # If the HelpPanel is not already created
+    #         self.hp = HelpPanel(self)
+    #     self.hp.show()
 
+    
 
-    def setup_help_panel(self):
-        if not self.hp:  # If the HelpPanel is not already created
-            self.hp = HelpPanel(self)
-        self.hp.show()
+    
 
     def setup_control_panel(self):
         self.cp = ControlPanel(self)
@@ -1433,6 +1437,7 @@ class ControlPanel(QWidget):
         faults = self.parent.controller.write_page_to_VEL(current_page_text)
         if faults:
             string = ""
+            print("faults: ")
             print (faults)
             for fault in faults:
                 if len(fault) == 2:

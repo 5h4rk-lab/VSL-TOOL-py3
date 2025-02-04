@@ -1,7 +1,15 @@
 EVSE Configuration File. Version 2.0
 Date: 2018-11-29 18:45:51
 See config_file_format_help.txt for formatting notes
-:::EVSE Factory Settings, 0
+:::Index, 0
++ff;
+STOP do not use;
+string;
+;
+Serial number, unique to this device;
+;
+;
+:::EVSE Factory Settings, ff
 +sn;
 Serial Number;
 string;
@@ -68,7 +76,7 @@ True;
 +hm;
 Manufacturer Installed Hose/Ports;
 integer;
-set, 1, 2;
+range, 1, 2;
 The number of hoses or ports built into EVSE from manufacturer (1 or 2, defaults to 1);
 1;
 True;
@@ -269,6 +277,13 @@ set, 1, 2;
 The number of hoses or ports after a certified field technician update (1 or 2, defaults to 1);
 1;
 True;
++ct;
+Version of configuration (DFlash) program;
+string;
+length, 32;
+Version of configuration or 'DFlash' tool writing these (auto filled in);
+;
+;
 :::EVSE Power Limits, 4
 +mc;
 Maximum Charge-Rate;
@@ -301,10 +316,10 @@ The minimum discharge rate in amperes of this EVSE;
 +ot;
 Overcurrent trip (% of mc/md);
 integer;
-range, 102, 200;
+range, 110, 125;
 Default is relay opens at 112% of max(mc,md) to prevent buiolding breaker trip; set only if it should open at a different current;
-102;
-;
+112;
+True;
 :::EVSE Network Data, 5
 +hn;
 Hostname of Aggregator;
