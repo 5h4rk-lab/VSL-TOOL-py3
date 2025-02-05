@@ -1,0 +1,54 @@
+<fixedinfo>
+    <category>
+        <title>Serial Number</title>
+        <identifier>sn</identifier>
+        <default xmlns:xi="http://www.w3.org/2001/XInclude">
+            <xi:include href="serial_number.txt" parse="text" />
+        </default>
+    </category>
+    <category>
+        <title>Manufacturer</title>
+        <identifier>ma</identifier>
+        <default>FSE</default>
+    </category>
+    <category>
+        <title>Model Number</title>
+        <identifier>mo</identifier>
+        <default>B</default>
+    </category>
+    <category>
+        <title>Part Number</title>
+        <identifier>pn</identifier>
+        <default>EVSE-B-P1-H1-T2R-A32</default>
+    </category>
+    <category>
+        <title>Hardware Version</title>
+        <identifier>hv</identifier>
+        <default>1.0</default>
+    </category>
+    <category>
+        <title>VEL Version</title>
+        <identifier>vv</identifier>
+        <default>5.3c_0</default>
+    </category>
+    <category>
+        <title>Connector</title>
+        <identifier>cn</identifier>
+        <default>Type2_CaseB</default>
+    </category>
+    <category>
+        <title>Phase Capability</title>
+        <identifier>ph</identifier>
+        <default>1</default>
+    </category>
+    <category>
+        <title>Default Max Current</title>
+        <identifier>dm</identifier>
+        <default>32</default>
+    </category>
+    <category>
+        <title>Manufacturer Meter Type</title>
+        <identifier>bm</identifier>
+        <default>UD-B</default>
+    </category>
+</fixedinfo>

@@ -1,0 +1,14 @@
+<fixedinfo>
+    <category>
+        <title>Serial Number</title>
+        <identifier>sn</identifier>
+        <default xmlns:xi="http://www.w3.org/2001/XInclude">
+            <xi:include href="serial_number.txt" parse="text" />
+        </default>
+    </category>
+    <category>
+        <title>Hardware Version</title>
+        <identifier>vv</identifier>
+        <default>5.2b_1</default>
+    </category>
+</fixedinfo>
