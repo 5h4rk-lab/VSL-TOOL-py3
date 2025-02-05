@@ -1489,7 +1489,8 @@ class AddInfo(QWidget):
         self.edits = edits
         self.itemindex = i
 
-        label1 = QLabel(field[1] + '(' + field[0] + ')', self)
+        label1 = QLabel(str(field[1]) + ' (' + str(field[0]) + ')', self)
+
 
         if field[con.ConfigFields.TYPE] is int:
             if field[con.ConfigFields.VALUE] is None:

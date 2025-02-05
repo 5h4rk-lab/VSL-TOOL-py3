@@ -268,27 +268,90 @@ class Controller(object):
         """
         unrecognized = []
         for key, value in dictionary.items():
-            if (key == 'ad') and (value is not None): #Update the address fields
+            if key == 'ad' and value is not None:  # Update the address fields
+                adr_lines = value.split('|')  # Split the address into multiple parts
+
+                # 🛠 **NEW: Ensure 'ad1', 'ad2', etc., exist in self.id_map**
+                for i in range(len(adr_lines)):  
+                    key_name = f"ad{i+1}"  # Creates 'ad1', 'ad2', etc.
+                    if key_name not in self.id_map:  
+                        self.id_map[key_name] = (page_list_index, len(self.config_list[page_list_index]))
+
+                # Now call split_address() since the necessary keys exist
                 self.split_address(key, value)
+
             elif key in self.id_map:
                 page_index, field_index = self.id_map[key]
-                if (self.config_list[page_index][field_index][ConfigFields.TYPE] is int) and (value): #convert hex values to int
-                    value = int(value, 16)
+                if self.config_list[page_index][field_index][ConfigFields.TYPE] is int and value:  
+                    value = int(value, 16)  # Convert hex values to int
                 self.config_list[page_index][field_index][ConfigFields.VALUE] = value
             else:
-                new_list = [key, "UNRECOGNIZED VALUE", str, None, "This is a value that was on the DFLASH but may be new or preexisting from.  If this is supposed to be a number, it should be in hexidecimal", 
-                            value, False]
+                new_list = [key, "UNRECOGNIZED VALUE", str, None, "This value was in DFLASH but might be new or preexisting. If it's a number, it should be hexadecimal.", value, False]
                 unrecognized.append(key)
                 self.config_list[page_list_index].append(new_list)
                 self.id_map[key] = (page_list_index, len(self.config_list[page_list_index]) - 1)
+
         return unrecognized
+
+        # unrecognized = []
+        # for key, value in dictionary.items():
+        #     if (key == 'ad') and (value is not None): #Update the address fields
+        #         self.split_address(key, value)
+        #     elif key in self.id_map:
+        #         page_index, field_index = self.id_map[key]
+        #         if (self.config_list[page_index][field_index][ConfigFields.TYPE] is int) and (value): #convert hex values to int
+        #             value = int(value, 16)
+        #         self.config_list[page_index][field_index][ConfigFields.VALUE] = value
+        #     else:
+        #         new_list = [key, "UNRECOGNIZED VALUE", str, None, "This is a value that was on the DFLASH but may be new or preexisting from.  If this is supposed to be a number, it should be in hexidecimal", 
+        #                     value, False]
+        #         unrecognized.append(key)
+        #         self.config_list[page_list_index].append(new_list)
+        #         self.id_map[key] = (page_list_index, len(self.config_list[page_list_index]) - 1)
+        # return unrecognized
+
+    # def split_address(self, key, value):
+    #     adr_lines = value.split('|')
+    #     if len(adr_lines) == 6:
+    #         page_index, field_index = self.id_map['ad1']
+    #         for i, line in enumerate(adr_lines):
+    #             self.config_list[page_index][field_index + i][ConfigFields.VALUE] = line
+    
+        
 
     def split_address(self, key, value):
         adr_lines = value.split('|')
         if len(adr_lines) == 6:
-            page_index, field_index = self.id_map['ad1']
+            page_index, field_index = self.id_map.get('ad1', (None, None))
+    
+            if page_index is None or field_index is None:
+                print(f"Error: 'ad1' not found in id_map. Available keys: {self.id_map.keys()}")
+                return
+            
+            if page_index >= len(self.config_list):
+                print(f"Error: page_index {page_index} out of range for config_list (size={len(self.config_list)})")
+                return
+    
+            # 🔹 Determine number of fields in ConfigFields
+            if isinstance(ConfigFields, dict):  
+                num_fields = len(ConfigFields.keys())  # Dictionary case
+            elif hasattr(ConfigFields, '__len__'):  
+                num_fields = len(ConfigFields)  # List or tuple case
+            else:  
+                num_fields = len([attr for attr in dir(ConfigFields) if not attr.startswith("__")])  # Enum or class case
+    
+            # 🔹 Expand the list if needed
+            while field_index + len(adr_lines) > len(self.config_list[page_index]):
+                self.config_list[page_index].append([None] * num_fields)  
+    
+            # ✅ Assign values safely
             for i, line in enumerate(adr_lines):
                 self.config_list[page_index][field_index + i][ConfigFields.VALUE] = line
+
+
+
+
+
 
     def populate_from_vel(self, page_title):
         """
