@@ -598,7 +598,7 @@ class ProgrammerExecutable(object):
                 print("Error: Installation directory not found.")
                 return # as we actually dont need it.
             if self.vel:
-                self.path = os.path.join(val,"HCS12_FlashProgrammer.exe")
+                self.path = os.path.join(val,"UsbdmFlashProgrammer.exe")
                 #self.path = 'C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs\\USBDM 4.12.1.340\\HCS12_FlashProgrammer.exe'
                 #print(self.path)
             else:
@@ -638,7 +638,7 @@ class ProgrammerExecutable(object):
     def vel_execute(self, s19_file):
         try:
             #print subprocess.check_output([self.path,s19_file,'-device=MC9S12XEP100','-unsecure','-masserase','-program','-execute'])\
-            print(subprocess.check_output([self.path,s19_file,'-device=MC9S12XEP100','-erase=selective','-program','-execute']))
+            print(subprocess.check_output([self.path,'-target=HCS12','-device=MC9S12XEP100','-erase=selective',s19_file]))
             print("Finished programming \n")
         except Exception as e:
             print("Error trying to execute programmer executable")
@@ -646,7 +646,7 @@ class ProgrammerExecutable(object):
 
     def gfi_execute(self, s19_file):
         try:
-            print(subprocess.check_output([self.path,s19_file,'-device=MC9S08SH4','-trim=33.6','-nvloc=FFAE','-secure','-masserase','-program','-execute']))
+            print(subprocess.check_output([self.path,s19_file,'-target=HCS08','-device=MC9S08SH4','-trim=33.6','-nvloc=FFAE','-secure','-masserase','-program','-execute']))
             print("Finished programming \n")
         except Exception as e:
             print("Error trying to execute programmer executable")
