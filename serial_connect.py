@@ -325,8 +325,18 @@ def write_to_VEL(ser, page_number, formatted_string):
     NOTES: must be in the bootloader for this function to work
     """
     ser.flushInput()
+
+    # Ensure page_number is an integer
+    if isinstance(page_number, str):
+        page_number = int(page_number, 16)  # Convert hex string to integer
+    elif not isinstance(page_number, int):
+        raise TypeError(f"Unexpected type for page_number: {type(page_number)}, value: {page_number}")
+
+    # Send data in the expected format
     ser.write(f'b{page_number:02X}{len(formatted_string):04X}'.encode('utf-8'))
+
     found, tags = wait_for_response(ser, desired_tag=Messages.DFLASH_SEND_DATA)
+    
     if found:
         logging.info("Sending fixed information...")
         logging.info(print_fixed_info(formatted_string))
@@ -334,9 +344,10 @@ def write_to_VEL(ser, page_number, formatted_string):
             ser.write(char.encode('utf-8'))
             time.sleep(.001)
         return True
-    else: #optional
-        logging.warning("ERROR!! " + str([tag.name for tag in tags])) #optional
+    else:
+        logging.warning("ERROR!! " + str([tag.name for tag in tags]))
         return False
+
 
 
 ###USED FOR THE WRITE FUNCTION

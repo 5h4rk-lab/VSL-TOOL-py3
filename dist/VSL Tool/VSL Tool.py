@@ -375,7 +375,7 @@ class FixedInformationDialog(QtWidgets.QDialog):
             if dlg.exec_():
                 my_dict = dlg.lineEdit_dictionary
                 data = io.StringIO()
-                for key, value in my_dict.iteritems():
+                for key, value in my_dict():
                     value = value.text.encode("utf-8")
                     fixed_info_config.updateValue(key, value)
                     data.write(key[:2])
@@ -580,7 +580,10 @@ class ProgrammerExecutable(object):
         self.found = False
 
         if os.sys.platform.startswith("win"):
-            aKeys = [r"SOFTWARE\pgo\USBDM", r"SOFTWARE\Wow6432Node\pgo\USBDM"]
+            aKeys = [
+            r"SOFTWARE\pgo\USBDM",
+            r"SOFTWARE\Wow6432Node\pgo\USBDM"
+        ]
             val = None
             for aKey in aKeys:
                 try:
@@ -588,7 +591,7 @@ class ProgrammerExecutable(object):
                     asubkey=OpenKey(aReg,aKey)
                     val=QueryValueEx(asubkey, "InstallationDirectory")[0]
                     self.found = True
-                    print ("Found the installation directory")
+                    print("Found the installation directory: {val}")
                     break
                 except EnvironmentError:
                     print("Checking next key")
@@ -1444,10 +1447,10 @@ class ControlPanel(QWidget):
                     string += "Fault at id: (" + fault[0] + ") | " + self.parent.controller.fault_messages[int(fault[1])] + '\n'
                 else:
                     string = fault
-            dlg = QMessageBox.information(self, 'Fault', ''' Faults On Page''',QMessageBox.Ok)
+            QMessageBox.information(self, 'Fault', ''' Faults On Page''',QMessageBox.Ok)
             #dlg = wx.MessageDialog(self, string, "Faults On Page", wx.OK | wx.ICON_WARNING)
-            dlg.ShowModal()
-            dlg.Destroy()
+            # dlg.ShowModal()
+            # dlg.Destroy()
         else:
             #reply = QtGui.QMessageBox.information(self,"QMessageBox.information()", Dialog.MESSAGE)
             #dlg = QtGui.QMessageBox.information(self, 'Info Message', ''' Info Message Box''',QMessageBox.Ok)
@@ -1463,6 +1466,8 @@ class ControlPanel(QWidget):
             faults += self.parent.controller.write_page_to_VEL(item[0])
         if faults:
             string = ""
+            print("faults: ")
+            print (faults)
             for fault in faults:
                 if len(fault) == 2:
                     page_index, field_index = self.parent.controller.id_map[fault[0]]
@@ -1471,8 +1476,10 @@ class ControlPanel(QWidget):
                     string += "\nNOTE: Pages without faults were written correctly"
                 else:
                     string = fault
-            QMessageBox.information(self, "Faults", "Faults on Pages",QMessageBox.Ok)
+            print("faults: ")
             print (faults)
+            QMessageBox.information(self, "Faults", "Faults on Pages",QMessageBox.Ok)
+            
         else:
             QMessageBox.information(self, "All Pages Written", "All pages written successfully!",QMessageBox.Ok)
 

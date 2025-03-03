@@ -553,6 +553,8 @@ class ControlPanel(wx.Panel):
                     string += "\nNOTE: Pages without faults were written correctly"
                 else:
                     string = fault
+                    print("faults")
+            print(faults)
             dlg = wx.MessageDialog(self, string, "Faults on Pages", wx.OK | wx.ICON_WARNING)
             dlg.ShowModal()
             dlg.Destroy()

@@ -137,8 +137,7 @@ class BootloaderComponent(FormComponent):
             self.checkForBootloader()
             print ("\n")
         else:
-            print ("No S19 selected \n"
-)
+            print ("No S19 selected \n")
     def enable(self):
         super(BootloaderComponent, self).enable()
         self.checkForBootloader()
@@ -198,7 +197,7 @@ class FixedInfoComponent(FormComponent):
         if self.serial.switchToBootloader():
             self.serial.ser.flushInput()
             print("Sending a 'c' to bootloader to read fixed information")
-            self.serial.ser.write('cFF'.encode('utf-8'))  # Encoding string to bytes
+            self.serial.ser.write(b'cFF')  # Encoding string to bytes
             found, _ = self.serial.waitForResponse(
                 desired_tag=Messages.DFLASH_DATA)
             if found:
@@ -248,15 +247,15 @@ class FixedInfoComponent(FormComponent):
             if self.serial.switchToBootloader():
                 self.serial.ser.flushInput()
                 print ("Sending a 'b' to bootloader to write fixed information")
-                self.serial.ser.write('bFF')
-                self.serial.ser.write("%04X" % len(fixedInfo))
+                self.serial.ser.write(b'bFF')
+                self.serial.ser.write(b"%04X" % len(fixedInfo))
 
                 found, tags = self.serial.waitForResponse( \
                     desired_tag=Messages.DFLASH_SEND_DATA)
                 if found:
                     print ("Sending fixed information: ")
                     for ch in fixedInfo:
-                        self.serial.ser.write(ch)
+                        self.serial.ser.write(ch.encode('utf-8'))
                         time.sleep(.001)
                     self.checkForFixedInfo()
                 else:
@@ -278,7 +277,7 @@ class FixedInfoComponent(FormComponent):
         if self.serial.switchToBootloader():
             self.serial.ser.flushInput()
             print("Sending a 'c' to bootloader to read fixed information")
-            self.serial.ser.write('cFF'.encode('utf-8'))  # Encoding string to bytes
+            self.serial.ser.write(b'cFF')  # Encoding string to bytes
             # self.serial.ser.write('\x00')
             found, _ = self.serial.waitForResponse(
                 desired_tag=Messages.DFLASH_DATA, max_length=1000)
@@ -375,8 +374,8 @@ class FixedInformationDialog(QtWidgets.QDialog):
             if dlg.exec_():
                 my_dict = dlg.lineEdit_dictionary
                 data = io.StringIO()
-                for key, value in my_dict.iteritems():
-                    value = value.text.encode("utf-8")
+                for key, value in my_dict.items():
+                    value = value.text()
                     fixed_info_config.updateValue(key, value)
                     data.write(key[:2])
                     data.write(value)
@@ -580,7 +579,10 @@ class ProgrammerExecutable(object):
         self.found = False
 
         if os.sys.platform.startswith("win"):
-            aKeys = [r"SOFTWARE\pgo\USBDM", r"SOFTWARE\Wow6432Node\pgo\USBDM"]
+            aKeys = [
+            r"SOFTWARE\pgo\USBDM",
+            r"SOFTWARE\Wow6432Node\pgo\USBDM"
+        ]
             val = None
             for aKey in aKeys:
                 try:
@@ -597,8 +599,11 @@ class ProgrammerExecutable(object):
                 return # as we actually dont need it.
             if self.vel:
                 self.path = os.path.join(val,"HCS12_FlashProgrammer.exe")
+                #self.path = 'C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs\\USBDM 4.12.1.340\\HCS12_FlashProgrammer.exe'
+                #print(self.path)
             else:
                 self.path = os.path.join(val,"HCS08_FlashProgrammer.exe")
+                #print(self.path)
 
             #execglob = '\pgo\USBDM*\HCS12_FlashProgrammer.exe' if self.vel else '\pgo\USBDM*\HCS08_FlashProgrammer.exe'
             #self.found = False
@@ -1444,10 +1449,10 @@ class ControlPanel(QWidget):
                     string += "Fault at id: (" + fault[0] + ") | " + self.parent.controller.fault_messages[int(fault[1])] + '\n'
                 else:
                     string = fault
-            dlg = QMessageBox.information(self, 'Fault', ''' Faults On Page''',QMessageBox.Ok)
+                QMessageBox.information(self, 'Fault', ''' Faults On Page''',QMessageBox.Ok)
             #dlg = wx.MessageDialog(self, string, "Faults On Page", wx.OK | wx.ICON_WARNING)
-            dlg.ShowModal()
-            dlg.Destroy()
+            # dlg.ShowModal()
+            # dlg.Destroy()
         else:
             #reply = QtGui.QMessageBox.information(self,"QMessageBox.information()", Dialog.MESSAGE)
             #dlg = QtGui.QMessageBox.information(self, 'Info Message', ''' Info Message Box''',QMessageBox.Ok)
