@@ -646,7 +646,7 @@ class ProgrammerExecutable(object):
 
     def gfi_execute(self, s19_file):
         try:
-            print(subprocess.check_output([self.path,s19_file,'-target=HCS08','-device=MC9S08SH4','-trim=33.6','-nvloc=FFAE','-secure','-masserase','-program','-execute']))
+            print(subprocess.check_output([self.path,'-target=HCS08','-device=MC9S08SH4','-trim=33.6','-nvloc=FFAE','-secure','-masserase',s19_file]))
             print("Finished programming \n")
         except Exception as e:
             print("Error trying to execute programmer executable")
