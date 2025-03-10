@@ -273,7 +273,7 @@ Serial number of internal EVSE meter, or, UD meter in EVSE-B single will assume 
 +hu;
 Hose/Port Field Update;
 integer;
-set, 1, 2;
+range, 1, 2;
 The number of hoses or ports after a certified field technician update (1 or 2, defaults to 1);
 1;
 True;

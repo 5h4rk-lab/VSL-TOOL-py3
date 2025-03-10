@@ -113,7 +113,6 @@ class FormComponent(object):
 # The labels & button relating to the bootloader
 ###
 ###
-#TODO: update the syntax to python3 and QtGui.QFileDialog
 class BootloaderComponent(FormComponent):
 
     def __init__(self, serial, programmer):
@@ -140,20 +139,20 @@ class BootloaderComponent(FormComponent):
             print ("No S19 selected \n")
     def enable(self):
         super(BootloaderComponent, self).enable()
-        self.checkForBootloader()
+        if not self.detected:
+            self.checkForBootloader()
 
     def checkForBootloader(self):
         print ("Checking for bootloader")
         if self.serial.switchToBootloader():
             print ("Bootloader detected \n")
-            self.setDetected(True)
+            self.setDetected(True) 
         else:
             print ("Bootloader not detected \n")
             self.setDetected(False)
 
 ###
 # The labels & button relating to fixed information
-#TODO: update the syntax to python3 and QtGui.QFileDialog
 ###
 class FixedInfoComponent(FormComponent):
 
@@ -578,7 +577,7 @@ class ProgrammerExecutable(object):
         print ("Searching for " + txt + " programmer executable")
         self.found = False
 
-        if os.sys.platform.startswith("win"):
+        if os.sys.platform.startswith("win"): #change to wins
             aKeys = [
             r"SOFTWARE\pgo\USBDM",
             r"SOFTWARE\Wow6432Node\pgo\USBDM"
@@ -1291,17 +1290,19 @@ class MainWindow(QMainWindow):
 
         if self.bootloader.isEnabled() and (not self.vel_programmer.found or not self.serial.connected):
             self.bootloader.disable()
-        elif not self.bootloader.isEnabled() and (self.vel_programmer.found and self.serial.connected):
+        elif not self.bootloader.isEnabled() and self.serial.connected:
             self.bootloader.enable()
+            if not self.vel_programmer.found or not self.serial.connected:
+                self.bootloader.disable()
 
-        if self.fixedinfo.isEnabled() and (not self.vel_programmer.found or not self.serial.connected or not self.bootloader.detected):
+        if self.fixedinfo.isEnabled() and (not self.serial.connected or not self.bootloader.detected):
             self.fixedinfo.disable()
-        elif not self.fixedinfo.isEnabled() and (self.vel_programmer.found and self.serial.connected and self.bootloader.detected):
+        elif not self.fixedinfo.isEnabled() and (self.serial.connected and self.bootloader.detected):
             self.fixedinfo.enable()
 
-        if self.velcode.isEnabled() and (not self.vel_programmer.found or not self.serial.connected or not self.bootloader.detected):
+        if self.velcode.isEnabled() and (not self.serial.connected or not self.bootloader.detected):
             self.velcode.disable()
-        elif not self.velcode.isEnabled() and (self.vel_programmer.found and self.serial.connected and self.bootloader.detected):
+        elif not self.velcode.isEnabled() and (self.serial.connected and self.bootloader.detected):
             self.velcode.enable()
 
     def forceRefresh(self):
@@ -1428,50 +1429,94 @@ class ControlPanel(QWidget):
         self.show()
 
 
-    def OnClickPage(self):
 
+    def OnClickPage(self):
         self.setFocus()
-        items = (self.parent.config_index[:])
-        option = []
-        for i in range(0, len(items)):
-            option.append(str(items[i][0]))
-        item, ok = QInputDialog.getItem(self, "QInputDialog.getItem()","Which page you want to save?", option, 0, False)
-        if ok and item:
-            current_page_text = item      #self.parent.controller.config_index[self.parent.nb.GetCurrentPage().page_index][0]
-        #Include a dlg box allowing user to cancel action
-        faults = self.parent.controller.write_page_to_VEL(current_page_text)
+        items = self.parent.config_index[:]
+        option = [str(item[0]) for item in items]
+    
+        item, ok = QInputDialog.getItem(self, "QInputDialog.getItem()", "Which page do you want to save?", option, 0, False)
+    
+        if not ok or not item:
+            QMessageBox.warning(self, "Warning", "No page selected. Operation canceled.", QMessageBox.Ok)
+            return
+    
+        # Check if the selected page is "EVSE Factory Setting"
+        if item.lower() == "evse factory settings":
+            password, ok = QInputDialog.getText(self, "Password Required", "Enter the password to modify factory settings:", QLineEdit.Password)
+            
+            if not ok or password != "cvorgcvorg":  # Replace with the actual password or validation method
+                QMessageBox.warning(self, "Access Denied", "Incorrect password. Action canceled.", QMessageBox.Ok)
+                return  # Exit the function if the password is incorrect
+    
+        # Proceed with writing the page if password is correct or not a factory setting
+        faults = self.parent.controller.write_page_to_VEL(item)
+    
         if faults:
             string = ""
-            print("faults: ")
-            print (faults)
+            print("faults:", faults)
             for fault in faults:
                 if len(fault) == 2:
-                    string += "Fault at id: (" + fault[0] + ") | " + self.parent.controller.fault_messages[int(fault[1])] + '\n'
+                    string += f"Fault at id: ({fault[0]}) | {self.parent.controller.fault_messages[int(fault[1])]}\n"
                 else:
                     string = fault
-                QMessageBox.information(self, 'Fault', ''' Faults On Page''',QMessageBox.Ok)
-            #dlg = wx.MessageDialog(self, string, "Faults On Page", wx.OK | wx.ICON_WARNING)
-            # dlg.ShowModal()
-            # dlg.Destroy()
+            QMessageBox.information(self, "Fault", "Faults On Page", QMessageBox.Ok)
         else:
-            #reply = QtGui.QMessageBox.information(self,"QMessageBox.information()", Dialog.MESSAGE)
-            #dlg = QtGui.QMessageBox.information(self, 'Info Message', ''' Info Message Box''',QMessageBox.Ok)
-            QMessageBox.information(self, "Page Written", "Current page written successfully!",QMessageBox.Ok)
-            #dlg = wx.MessageDialog(self, "Current page written successfully!", "Page Written", wx.OK | wx.ICON_INFORMATION)
-            #dlg.ShowModal()
-            #dlg.close()
+            QMessageBox.information(self, "Page Written", "Current page written successfully!", QMessageBox.Ok)
+
+
+
+    # def OnClickPage(self):
+
+    #     self.setFocus()
+    #     items = (self.parent.config_index[:])
+    #     option = []
+    #     for i in range(0, len(items)):
+    #         option.append(str(items[i][0]))
+    #     item, ok = QInputDialog.getItem(self, "QInputDialog.getItem()","Which page you want to save?", option, 0, False)
+    #     if ok and item:
+    #         current_page_text = item      #self.parent.controller.config_index[self.parent.nb.GetCurrentPage().page_index][0]
+    #     #Include a dlg box allowing user to cancel action
+    #     faults = self.parent.controller.write_page_to_VEL(current_page_text)
+    #     if faults:
+    #         string = ""
+    #         print("faults: ")
+    #         print (faults)
+    #         for fault in faults:
+    #             if len(fault) == 2:
+    #                 string += "Fault at id: (" + fault[0] + ") | " + self.parent.controller.fault_messages[int(fault[1])] + '\n'
+    #             else:
+    #                 string = fault
+    #             QMessageBox.information(self, 'Fault', ''' Faults On Page''',QMessageBox.Ok)
+    #         #dlg = wx.MessageDialog(self, string, "Faults On Page", wx.OK | wx.ICON_WARNING)
+    #         # dlg.ShowModal()
+    #         # dlg.Destroy()
+    #     else:
+    #         #reply = QtGui.QMessageBox.information(self,"QMessageBox.information()", Dialog.MESSAGE)
+    #         #dlg = QtGui.QMessageBox.information(self, 'Info Message', ''' Info Message Box''',QMessageBox.Ok)
+    #         QMessageBox.information(self, "Page Written", "Current page written successfully!",QMessageBox.Ok)
+    #         #dlg = wx.MessageDialog(self, "Current page written successfully!", "Page Written", wx.OK | wx.ICON_INFORMATION)
+    #         #dlg.ShowModal()
+    #         #dlg.close()
 
     def OnClickAll(self):
         self.setFocus()
         faults = []
-        for item in self.parent.controller.config_index[1:]:
+        for item in self.parent.controller.config_index[2:]:
+            #print index number of page
+            page = item[0]
+            print("Page: " + page)
             faults += self.parent.controller.write_page_to_VEL(item[0])
+            #print writen page.
+            print("Page written: " + page)
         if faults:
             string = ""
             for fault in faults:
                 if len(fault) == 2:
                     page_index, field_index = self.parent.controller.id_map[fault[0]]
                     page = self.parent.controller.config_index[page_index][0]
+                    #checking page numbers for faults
+                    
                     string += "Fault at id: (" + fault[0] + ") in " + page + " | " + self.parent.controller.fault_messages[fault[1]] + '\n'
                     string += "\nNOTE: Pages without faults were written correctly"
                 else:
@@ -1479,7 +1524,7 @@ class ControlPanel(QWidget):
             QMessageBox.information(self, "Faults", "Faults on Pages",QMessageBox.Ok)
             print (faults)
         else:
-            QMessageBox.information(self, "All Pages Written", "All pages written successfully!",QMessageBox.Ok)
+            QMessageBox.information(self, "All Pages Written", "All pages written successfully! \nNOTE: Factory Page Not written.",QMessageBox.Ok)
 
 
 
