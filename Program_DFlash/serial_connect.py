@@ -81,6 +81,7 @@ def full_port_name(portname):
 def connect_to_port(port_name):
     try:
         ser = serial.Serial(full_port_name(port_name), 115200, timeout=0.05, xonxoff=True)
+        sleep(0.2)
         return ser
     except SerialException as e:
         logging.warning("Failed to open serial port")
@@ -167,15 +168,18 @@ def switch_to_bootloader(ser):
     ser.flushInput()
     logging.debug("Sending carriage return, seeing if bootloader responds")
     ser.write(b'\r')
+    ser.flushOutput()
     responded, tags = wait_for_response(ser, desired_tag=Messages.MAIN_MENU)
     i = 3  # try 3 times in case green board is sleeping 
     while (not responded) and (i > 0):
         logging.debug("Didn't respond, sending '*1#' over serial")
         ser.flushInput()
         ser.write(b"*1#")
+        ser.flushOutput()
         time.sleep(.5)
         ser.flushInput()
         ser.write(b'\r')
+        ser.flushOutput()
         responded, tags = wait_for_response(ser, desired_tag=Messages.MAIN_MENU)
         i -= 1
         print(i)
@@ -186,6 +190,7 @@ def switch_to_program_execute(ser):
     if switch_to_bootloader(ser):
         ser.flushInput()
         ser.write(b'd')
+        ser.flushOutput()
         print("success")
     else:
         print("STILL IN BOOTLOADER, SWITCH TO PROGRAM FROM TERA TERM")

@@ -20,7 +20,7 @@ from PySide6.QtGui import QGuiApplication
 from PySide6.QtCore import Qt
 from PySide6.QtCore import Signal as pyqtSignal
 from PySide6.QtCore import Slot as pyqtSlot
-from PySide6.QtWidgets import QApplication, QLabel, QMainWindow, QTabWidget,QComboBox, QVBoxLayout, QWidget, QGridLayout, QPushButton, QFileDialog, QMessageBox, QInputDialog, QDialogButtonBox, QScrollArea, QTextEdit, QLineEdit, QCheckBox
+from PySide6.QtWidgets import QApplication, QLabel, QMainWindow, QTabWidget,QComboBox, QVBoxLayout, QWidget, QGridLayout, QPushButton, QFileDialog, QMessageBox, QInputDialog, QDialogButtonBox, QScrollArea, QTextEdit, QLineEdit
 
 import xml.etree.ElementTree
 import xml.etree.ElementInclude
@@ -113,6 +113,7 @@ class FormComponent(object):
 # The labels & button relating to the bootloader
 ###
 ###
+#TODO: update the syntax to python3 and QtGui.QFileDialog
 class BootloaderComponent(FormComponent):
 
     def __init__(self, serial, programmer):
@@ -136,23 +137,24 @@ class BootloaderComponent(FormComponent):
             self.checkForBootloader()
             print ("\n")
         else:
-            print ("No S19 selected \n")
+            print ("No S19 selected \n"
+)
     def enable(self):
         super(BootloaderComponent, self).enable()
-        if not self.detected:
-            self.checkForBootloader()
+        self.checkForBootloader()
 
     def checkForBootloader(self):
         print ("Checking for bootloader")
         if self.serial.switchToBootloader():
             print ("Bootloader detected \n")
-            self.setDetected(True) 
+            self.setDetected(True)
         else:
             print ("Bootloader not detected \n")
             self.setDetected(False)
 
 ###
 # The labels & button relating to fixed information
+#TODO: update the syntax to python3 and QtGui.QFileDialog
 ###
 class FixedInfoComponent(FormComponent):
 
@@ -196,8 +198,8 @@ class FixedInfoComponent(FormComponent):
         if self.serial.switchToBootloader():
             self.serial.ser.flushInput()
             print("Sending a 'c' to bootloader to read fixed information")
-            self.serial.ser.write(b'cFF')  # Encoding string to bytes
-            found, _ , _ = self.serial.waitForResponse(
+            self.serial.ser.write('cFF'.encode('utf-8'))  # Encoding string to bytes
+            found, _ = self.serial.waitForResponse(
                 desired_tag=Messages.DFLASH_DATA)
             if found:
                 print("\nResponse:")
@@ -246,15 +248,15 @@ class FixedInfoComponent(FormComponent):
             if self.serial.switchToBootloader():
                 self.serial.ser.flushInput()
                 print ("Sending a 'b' to bootloader to write fixed information")
-                self.serial.ser.write(b'bFF')
-                self.serial.ser.write(b"%04X" % len(fixedInfo))
+                self.serial.ser.write('bFF')
+                self.serial.ser.write("%04X" % len(fixedInfo))
 
-                found, tags, _ = self.serial.waitForResponse( \
+                found, tags = self.serial.waitForResponse( \
                     desired_tag=Messages.DFLASH_SEND_DATA)
                 if found:
                     print ("Sending fixed information: ")
                     for ch in fixedInfo:
-                        self.serial.ser.write(ch.encode('utf-8'))
+                        self.serial.ser.write(ch)
                         time.sleep(.001)
                     self.checkForFixedInfo()
                 else:
@@ -276,9 +278,9 @@ class FixedInfoComponent(FormComponent):
         if self.serial.switchToBootloader():
             self.serial.ser.flushInput()
             print("Sending a 'c' to bootloader to read fixed information")
-            self.serial.ser.write(b'cFF')  # Encoding string to bytes
+            self.serial.ser.write('cFF'.encode('utf-8'))  # Encoding string to bytes
             # self.serial.ser.write('\x00')
-            found, _ , _= self.serial.waitForResponse(
+            found, _ = self.serial.waitForResponse(
                 desired_tag=Messages.DFLASH_DATA, max_length=1000)
 
             if found:
@@ -373,8 +375,8 @@ class FixedInformationDialog(QtWidgets.QDialog):
             if dlg.exec_():
                 my_dict = dlg.lineEdit_dictionary
                 data = io.StringIO()
-                for key, value in my_dict.items():
-                    value = value.text()
+                for key, value in my_dict.iteritems():
+                    value = value.text.encode("utf-8")
                     fixed_info_config.updateValue(key, value)
                     data.write(key[:2])
                     data.write(value)
@@ -524,8 +526,8 @@ class VelCodeComponent(FormComponent):
             if self.serial.switchToBootloader():
                 self.serial.ser.flushInput()
                 print("Sending an 'a' (erase & program) to bootloader")
-                self.serial.ser.write(b'a')
-                found, tags, _ = self.serial.waitForResponse( \
+                self.serial.ser.write('a')
+                found, tags = self.serial.waitForResponse( \
                     desired_tag=Messages.ERASED_SUCCESSFULLY, \
                         timeout=10, max_length=1000)
                 if found:
@@ -543,12 +545,9 @@ class VelCodeComponent(FormComponent):
 
     def checkForVelCode(self):
         print ("Checking for vel code")
-        found, revision = self.serial.switchToVel()
-        if found:
+        if self.serial.switchToVel():
             print ("Vel code detected \n")
             self.setDetected(True)
-            if revision != None:
-                self.variable_label.setText("Rev: "+revision)
         else:
             print( "Vel code not detected \n")
             self.setDetected(False)
@@ -580,11 +579,8 @@ class ProgrammerExecutable(object):
         print ("Searching for " + txt + " programmer executable")
         self.found = False
 
-        if os.sys.platform.startswith("win"): #change to wins
-            aKeys = [
-            r"SOFTWARE\pgo\USBDM",
-            r"SOFTWARE\Wow6432Node\pgo\USBDM"
-        ]
+        if os.sys.platform.startswith("win"):
+            aKeys = [r"SOFTWARE\pgo\USBDM", r"SOFTWARE\Wow6432Node\pgo\USBDM"]
             val = None
             for aKey in aKeys:
                 try:
@@ -600,12 +596,9 @@ class ProgrammerExecutable(object):
                 print("Error: Installation directory not found.")
                 return # as we actually dont need it.
             if self.vel:
-                self.path = os.path.join(val,"UsbdmFlashProgrammer.exe")
-                #self.path = 'C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs\\USBDM 4.12.1.340\\HCS12_FlashProgrammer.exe'
-                #print(self.path)
+                self.path = os.path.join(val,"HCS12_FlashProgrammer.exe")
             else:
                 self.path = os.path.join(val,"HCS08_FlashProgrammer.exe")
-                #print(self.path)
 
             #execglob = '\pgo\USBDM*\HCS12_FlashProgrammer.exe' if self.vel else '\pgo\USBDM*\HCS08_FlashProgrammer.exe'
             #self.found = False
@@ -640,7 +633,7 @@ class ProgrammerExecutable(object):
     def vel_execute(self, s19_file):
         try:
             #print subprocess.check_output([self.path,s19_file,'-device=MC9S12XEP100','-unsecure','-masserase','-program','-execute'])\
-            print(subprocess.check_output([self.path,'-target=HCS12','-device=MC9S12XEP100','-erase=selective',s19_file]))
+            print(subprocess.check_output([self.path,s19_file,'-device=MC9S12XEP100','-erase=selective','-program','-execute']))
             print("Finished programming \n")
         except Exception as e:
             print("Error trying to execute programmer executable")
@@ -648,7 +641,7 @@ class ProgrammerExecutable(object):
 
     def gfi_execute(self, s19_file):
         try:
-            print(subprocess.check_output([self.path,'-target=HCS08','-device=MC9S08SH4','-trim=33.6','-nvloc=FFAE','-secure','-masserase',s19_file]))
+            print(subprocess.check_output([self.path,s19_file,'-device=MC9S08SH4','-trim=33.6','-nvloc=FFAE','-secure','-masserase','-program','-execute']))
             print("Finished programming \n")
         except Exception as e:
             print("Error trying to execute programmer executable")
@@ -881,7 +874,7 @@ class MainWindow(QMainWindow):
                     self.tabs[j+1] = temp
         print (self.tabs)
         for i, tab in enumerate(self.tabs):
-            self.lineEdits = tab.info_line_list.findChildren(QtWidgets.QLineEdit)
+            self.lineEdits = tab.info_line_list.findChildren(QtGui.QLineEdit)
             print (self.lineEdits)
             for j,line in enumerate(self.lineEdits):
                 line.setText(str(self.controller.config_list[i+1][j][con.ConfigFields.VALUE]))
@@ -890,21 +883,20 @@ class MainWindow(QMainWindow):
 
     def onWriteSave(self):
         #create a new empty folder before you choose directory, and then save it in the folder you found
-        dlg = QtWidgets.QFileDialog.FileMode.Directory
-        directory = QFileDialog.getExistingDirectory(self, "Choose save directory","",QtWidgets.QFileDialog.DontResolveSymlinks | QtWidgets.QFileDialog.ShowDirsOnly)
+        dlg = QFileDialog.DontResolveSymlinks | QtGui.QFileDialog.ShowDirsOnly
+        directory = QFileDialog.getExistingDirectory()
         print ('selected_directory:', directory)
 
         msgBox = QMessageBox(QMessageBox.Warning,
                 "QMessageBox.warning()", "Do you really want to save the latest data?",
                 QMessageBox.NoButton, self)
-        msgBox.setStandardButtons(QMessageBox.StandardButtons.Yes | QMessageBox.StandardButtons.No)
-        if msgBox.exec() == QMessageBox.StandardButtons.Yes:
-            print(directory)
-            self.controller.save_user_values(directory)
-            msgBox = QMessageBox(QMessageBox.Information,
+        msgBox.addButton("Yes", QMessageBox.AcceptRole)
+        msgBox.addButton("No", QMessageBox.RejectRole)
+        if msgBox.exec_() == QMessageBox.AcceptRole:
+            self.controller.save_user_values(directory.replace('\\', '/'))
+            reply = QMessageBox.information(self,
                 "QMessageBox.information()", 'The files are saved in the folder you choose')
         else:
-            print("WTF?")
             pass
 
 
@@ -979,7 +971,6 @@ class MainWindow(QMainWindow):
     def setupDflGrid(self):
         self.current_port = "-"
         self.current_config = "-"
-        self.vel_box_state = 0
         available_ports = ["-"]
         available_configs = ["-"]
         available_ports.extend(self.controller.list_serial_ports())
@@ -1002,14 +993,12 @@ class MainWindow(QMainWindow):
         combo2.addItem(available_configs[4])
         combo2.addItem(available_configs[5])
         combo2.activated.connect(self.new_config)
-        btn1 = QPushButton("Open DFLASH", self)
+        btn1 = QPushButton("Open Serial Port", self)
         btn1.clicked.connect(self.OnClick1)
         btn2 = QPushButton("Open Configruation", self)
         btn2.clicked.connect(self.OnClick2)
         btn3 = QPushButton("Select Serial Port", self)
         btn3.clicked.connect(self.serial.selectSerialPort)
-        box = QCheckBox("No VEL Check", self)
-        box.stateChanged.connect(self.update_checkbox)
 
 
 
@@ -1020,15 +1009,13 @@ class MainWindow(QMainWindow):
         grid.addWidget(btn2, 2, 2)
         grid.addWidget(btn3, 0, 1)
         grid.addWidget(combo2, 2, 1)
-        grid.addWidget(box, 1, 1)
         return grid
 
     def new_config(self,combo2):
         self.current_config = int(combo2)
 
 
-    def update_checkbox(self,box):
-        self.vel_box_state = int(box)
+
 
 
     def OnClick1(self):
@@ -1142,9 +1129,9 @@ class MainWindow(QMainWindow):
 
     def init_config_file(self, number):
         """
-        Takes in an integer (0, 1, 2, 3, or 4) and returns the corresponding config file's list.
-        Allows the user to select a custom configuration file if the number is out of range.
+        Takes in a integer (0, 1, 2, 3, or 4) and returns the corresponding config file's list
         """
+        #number = self.current_config     #Don't need to waste time, 'vv' shows which config files I need.
         number = int(number)
         if number == 0:
             fname = "evse_config.txt"
@@ -1157,29 +1144,19 @@ class MainWindow(QMainWindow):
         elif number == 4:
             fname = "ev_4_config.txt"
         else:
-            # Open a file dialog to allow the user to select a configuration file
-            fname, _ = QFileDialog.getOpenFileName(
-                self,
-                "Select Configuration File",
-                "",
-                "Text Files (*.txt);;All Files (*)"
-            )
-            if not fname:
-                QMessageBox.warning(self, "No File Selected", "No configuration file was selected.")
-                return  # Exit if no file is selected
-
+            fname = QFileDialog.getOpenFileName(None, "Open File","Text files (*.txt)")
         self.controller.set_vel_type(number)
         try:
             index, list_ = con.create_config_list(fname)
         except IOError:
-            QMessageBox.critical(self, "File Error", f"Could not open or read the file: {fname}")
-            return
-
+            open_dlg = QFileDialog.getOpenFileName(None, "Open File",filter = "Text files (*.txt)")
+            index, list_ = con.create_config_list(open_dlg.GetPath())
         self.controller.set_config_index(index)
+        #print index
         self.controller.set_config_list(list_)
+        #print self.controller.config_index[1:]
         self.config_index = self.controller.config_index[1:]
         print(self.config_index)
-
         if self.controller.get_config_list():
             self.controller.set_id_map(self.controller.make_id_map())
 
@@ -1309,23 +1286,18 @@ class MainWindow(QMainWindow):
 
         if self.bootloader.isEnabled() and (not self.vel_programmer.found or not self.serial.connected):
             self.bootloader.disable()
-        elif not self.bootloader.isEnabled() and self.serial.connected:
+        elif not self.bootloader.isEnabled() and (self.vel_programmer.found and self.serial.connected):
             self.bootloader.enable()
-            if not self.vel_programmer.found or not self.serial.connected:
-                self.bootloader.disable()
 
-        if self.fixedinfo.isEnabled() and (not self.serial.connected or not self.bootloader.detected):
+        if self.fixedinfo.isEnabled() and (not self.vel_programmer.found or not self.serial.connected or not self.bootloader.detected):
             self.fixedinfo.disable()
-        elif not self.fixedinfo.isEnabled() and (self.serial.connected and self.bootloader.detected):
+        elif not self.fixedinfo.isEnabled() and (self.vel_programmer.found and self.serial.connected and self.bootloader.detected):
             self.fixedinfo.enable()
 
-        if self.vel_box_state == 2:
+        if self.velcode.isEnabled() and (not self.vel_programmer.found or not self.serial.connected or not self.bootloader.detected):
             self.velcode.disable()
-        else:
-            if self.velcode.isEnabled() and (not self.serial.connected or not self.bootloader.detected):
-                self.velcode.disable()
-            elif not self.velcode.isEnabled() and (self.serial.connected and self.bootloader.detected):
-                self.velcode.enable()
+        elif not self.velcode.isEnabled() and (self.vel_programmer.found and self.serial.connected and self.bootloader.detected):
+            self.velcode.enable()
 
     def forceRefresh(self):
         self.bootloader.disable()
@@ -1451,94 +1423,50 @@ class ControlPanel(QWidget):
         self.show()
 
 
-
     def OnClickPage(self):
+
         self.setFocus()
-        items = self.parent.config_index[:]
-        option = [str(item[0]) for item in items]
-    
-        item, ok = QInputDialog.getItem(self, "QInputDialog.getItem()", "Which page do you want to save?", option, 0, False)
-    
-        if not ok or not item:
-            QMessageBox.warning(self, "Warning", "No page selected. Operation canceled.", QMessageBox.Ok)
-            return
-    
-        # Check if the selected page is "EVSE Factory Setting"
-        if item.lower() == "evse factory settings":
-            password, ok = QInputDialog.getText(self, "Password Required", "Enter the password to modify factory settings:", QLineEdit.Password)
-            
-            if not ok or password != "cvorgcvorg":  # Replace with the actual password or validation method
-                QMessageBox.warning(self, "Access Denied", "Incorrect password. Action canceled.", QMessageBox.Ok)
-                return  # Exit the function if the password is incorrect
-    
-        # Proceed with writing the page if password is correct or not a factory setting
-        faults = self.parent.controller.write_page_to_VEL(item)
-    
+        items = (self.parent.config_index[:])
+        option = []
+        for i in range(0, len(items)):
+            option.append(str(items[i][0]))
+        item, ok = QInputDialog.getItem(self, "QInputDialog.getItem()","Which page you want to save?", option, 0, False)
+        if ok and item:
+            current_page_text = item      #self.parent.controller.config_index[self.parent.nb.GetCurrentPage().page_index][0]
+        #Include a dlg box allowing user to cancel action
+        faults = self.parent.controller.write_page_to_VEL(current_page_text)
         if faults:
             string = ""
-            print("faults:", faults)
+            print("faults: ")
+            print (faults)
             for fault in faults:
                 if len(fault) == 2:
-                    string += f"Fault at id: ({fault[0]}) | {self.parent.controller.fault_messages[int(fault[1])]}\n"
+                    string += "Fault at id: (" + fault[0] + ") | " + self.parent.controller.fault_messages[int(fault[1])] + '\n'
                 else:
                     string = fault
-            QMessageBox.information(self, "Fault", "Faults On Page", QMessageBox.Ok)
+            dlg = QMessageBox.information(self, 'Fault', ''' Faults On Page''',QMessageBox.Ok)
+            #dlg = wx.MessageDialog(self, string, "Faults On Page", wx.OK | wx.ICON_WARNING)
+            dlg.ShowModal()
+            dlg.Destroy()
         else:
-            QMessageBox.information(self, "Page Written", "Current page written successfully!", QMessageBox.Ok)
-
-
-
-    # def OnClickPage(self):
-
-    #     self.setFocus()
-    #     items = (self.parent.config_index[:])
-    #     option = []
-    #     for i in range(0, len(items)):
-    #         option.append(str(items[i][0]))
-    #     item, ok = QInputDialog.getItem(self, "QInputDialog.getItem()","Which page you want to save?", option, 0, False)
-    #     if ok and item:
-    #         current_page_text = item      #self.parent.controller.config_index[self.parent.nb.GetCurrentPage().page_index][0]
-    #     #Include a dlg box allowing user to cancel action
-    #     faults = self.parent.controller.write_page_to_VEL(current_page_text)
-    #     if faults:
-    #         string = ""
-    #         print("faults: ")
-    #         print (faults)
-    #         for fault in faults:
-    #             if len(fault) == 2:
-    #                 string += "Fault at id: (" + fault[0] + ") | " + self.parent.controller.fault_messages[int(fault[1])] + '\n'
-    #             else:
-    #                 string = fault
-    #             QMessageBox.information(self, 'Fault', ''' Faults On Page''',QMessageBox.Ok)
-    #         #dlg = wx.MessageDialog(self, string, "Faults On Page", wx.OK | wx.ICON_WARNING)
-    #         # dlg.ShowModal()
-    #         # dlg.Destroy()
-    #     else:
-    #         #reply = QtGui.QMessageBox.information(self,"QMessageBox.information()", Dialog.MESSAGE)
-    #         #dlg = QtGui.QMessageBox.information(self, 'Info Message', ''' Info Message Box''',QMessageBox.Ok)
-    #         QMessageBox.information(self, "Page Written", "Current page written successfully!",QMessageBox.Ok)
-    #         #dlg = wx.MessageDialog(self, "Current page written successfully!", "Page Written", wx.OK | wx.ICON_INFORMATION)
-    #         #dlg.ShowModal()
-    #         #dlg.close()
+            #reply = QtGui.QMessageBox.information(self,"QMessageBox.information()", Dialog.MESSAGE)
+            #dlg = QtGui.QMessageBox.information(self, 'Info Message', ''' Info Message Box''',QMessageBox.Ok)
+            QMessageBox.information(self, "Page Written", "Current page written successfully!",QMessageBox.Ok)
+            #dlg = wx.MessageDialog(self, "Current page written successfully!", "Page Written", wx.OK | wx.ICON_INFORMATION)
+            #dlg.ShowModal()
+            #dlg.close()
 
     def OnClickAll(self):
         self.setFocus()
         faults = []
-        for item in self.parent.controller.config_index[2:]:
-            #print index number of page
-            page = item[0]
-            print("Page: " + page)
+        for item in self.parent.controller.config_index[1:]:
             faults += self.parent.controller.write_page_to_VEL(item[0])
-            #print writen page.
-            print("Page written: " + page)
         if faults:
             string = ""
             for fault in faults:
                 if len(fault) == 2:
                     page_index, field_index = self.parent.controller.id_map[fault[0]]
                     page = self.parent.controller.config_index[page_index][0]
-                    #checking page numbers for faults
-                    
                     string += "Fault at id: (" + fault[0] + ") in " + page + " | " + self.parent.controller.fault_messages[fault[1]] + '\n'
                     string += "\nNOTE: Pages without faults were written correctly"
                 else:
@@ -1546,7 +1474,7 @@ class ControlPanel(QWidget):
             QMessageBox.information(self, "Faults", "Faults on Pages",QMessageBox.Ok)
             print (faults)
         else:
-            QMessageBox.information(self, "All Pages Written", "All pages written successfully! \nNOTE: Factory Page Not written.",QMessageBox.Ok)
+            QMessageBox.information(self, "All Pages Written", "All pages written successfully!",QMessageBox.Ok)
 
 
 
@@ -1574,7 +1502,7 @@ class AddInfo(QWidget):
             self.setLayout(grid)
             if (field[con.ConfigFields.RANGE]) and (field[con.ConfigFields.RANGE][0] == 'range'):
                 self.tc.setValidator(QtGui.QIntValidator(field[con.ConfigFields.RANGE][1], field[con.ConfigFields.RANGE][2], self))#self.tc.setRange(field[con.ConfigFields.RANGE][1], field[con.ConfigFields.RANGE][2])
-            self.tc.cursorPositionChanged.connect(self.mymousePressEvent)
+            self.tc.cursorPositionChanged.connect(self.mousePressEvent)
             self.tc.textChanged.connect(self.new_value)
 
 
@@ -1589,7 +1517,7 @@ class AddInfo(QWidget):
             self.setLayout(grid)
             if (field[con.ConfigFields.RANGE]) and (field[con.ConfigFields.RANGE][0] == 'length'):
                 self.tc.setMaxLength(field[con.ConfigFields.RANGE][1])
-            self.tc.cursorPositionChanged.connect(self.mymousePressEvent)
+            self.tc.cursorPositionChanged.connect(self.mousePressEvent)
             self.tc.textChanged.connect(self.new_value)
 
     def all_clear(self):
@@ -1605,7 +1533,7 @@ class AddInfo(QWidget):
 
 
 
-    def mymousePressEvent(self):
+    def mousePressEvent(self):
         print (" I clicked ")
         i = self.parent.page_index
         j = self.itemindex

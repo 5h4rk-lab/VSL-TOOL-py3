@@ -64,6 +64,7 @@ class SerialConnection(object):
         elapsed_time = 0
         count = 0
         messages = []
+        revision = None
 
         while not (found_response or exceeded_timeout or exceeded_max_length):
             while self.ser.in_waiting > 0 and not exceeded_max_length:
@@ -101,14 +102,18 @@ class SerialConnection(object):
         print(response)
         print("\nCorrect response: ", found_response)
         print(f"Response took {elapsed_time:.2f} seconds (timeout={exceeded_timeout})")
-        return found_response, messages
+        rev=re.search('(?<=REV: )[0-9]*', response)
+        if hasattr(rev, 'group'):
+            revision = rev.group(0)
+            print("Revision=",revision)
+        return found_response, messages, revision
 
     def switchToBootloader(self):
         self.ser.reset_output_buffer()
         print("Sending carriage return, seeing if bootloader responds")
         self.ser.reset_input_buffer()
         self.ser.write(b'\r')
-        responded, tags = self.waitForResponse(desired_tag=Messages.MAIN_MENU)
+        responded, tags, _ = self.waitForResponse(desired_tag=Messages.MAIN_MENU)
         if responded is None:
             print("Didn't respond, sending '*1#' over serial")
             self.ser.reset_input_buffer()
@@ -118,7 +123,7 @@ class SerialConnection(object):
             print("Sending a carriage return to prompt a bootloader response")
             self.ser.reset_input_buffer()
             self.ser.write(b'\r')
-            responded, tags = self.waitForResponse(desired_tag=Messages.MAIN_MENU)
+            responded, tags, _ = self.waitForResponse(desired_tag=Messages.MAIN_MENU)
         return responded is not None
 
     def switchToVel(self):
@@ -126,9 +131,9 @@ class SerialConnection(object):
             self.ser.reset_input_buffer()
             print("Sending a 'd' to bootloader to execute application")
             self.ser.write(b'd')
-            found, tags = self.waitForResponse(msg='Resetting', timeout=3, max_length=1000)
-            return found
-        return False
+            found, tags, revision = self.waitForResponse(msg='Resetting', timeout=3, max_length=1000)
+            return found, revision
+        return False, None
 
     def sendFile(self, fname):
         with open(fname, 'r') as f:
@@ -144,7 +149,7 @@ class SerialConnection(object):
         for portname in self.enumerateSerialPorts():
             port_list.append(portname)
         item, ok = QInputDialog.getItem(
-            None, "Select Serial Port", "Detected Ports: ", port_list, 0, False
+            None, "Select Serial Port", "Detected Ports: ", port_list, 0, True
         )
         if ok and item:
             if sys.platform == "win32":

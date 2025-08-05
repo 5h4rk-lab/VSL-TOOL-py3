@@ -372,26 +372,35 @@ class Controller(object):
     def save_user_values(self, directory):
         file_list = []
         output_list = []
+        print("saving!")
         # look through the pages and return faults if there were any, if not, return a list of dictionaries
+        #print(self.config_list[1:])
         for page in self.config_list[1:]:
+            print(1)
             output = self.page_to_dictionary(page)
+            print(output)
+            print(type(output))
             if type(output) is dict:
                 output_list.append(output)
+                print(2)
             else:
+                print(3)
                 return output
         # save the list of dictionaries as files of DFlash ready strings
         for i, dictionary in enumerate(output_list):
+            print(dictionary)
             string = sc.format_dict_to_string(dictionary)
-            fname = 'b%02X%04X' % (self.config_index[i+1][1], len(string)) + '.dflash'
+            fname = 'b%02X%04X' % (int(str(self.config_index[i+1][1]),16), len(string)) + '.dflash'
             file_list.append(fname)
             with open(directory + '/' + fname, 'wb') as f:
-                f.write(string)
+                f.write(string.encode('utf-8'))
+                print(string.encode('utf-8'))
         # save the index file for the populate from save function
         with open(directory + '/' + "dflash_save_index.txt", 'wb') as f:
             information = "Do not delete this file, needed to populate from save in DFlash Program\n"
             information += "type:" + str(self.vel_type) + '\n'
             information += "~".join(file_list)
-            f.write(information)
+            f.write(information.encode('utf-8'))
 
     def populate_from_save_dir(self, directory):
         # list all files in chosen directory
@@ -404,14 +413,14 @@ class Controller(object):
                 # read the first line, which is just a message
                 f.readline()
                 # read the second line, which is the type of board and check it against the current type
-                if self.vel_type == int(f.readline().replace("type:", "")):
+                if self.vel_type == int(f.readline().replace(b"type:", b"")):
                     # list all the filenames
-                    filenames = f.readline().split('~')
+                    filenames = f.readline().split(b'~')
                     for i, fname in enumerate(filenames):
                         # open each file and read it
-                        with open(directory + '/' + fname, 'rb') as g:
+                        with open(directory + '/' + fname.decode(), 'rb') as g:
                             text = g.read()
-                            unrecognized.append(self.populate_from_dictionary_hex(sc.create_fixed_info_dict(text), i+1))
+                            unrecognized.append(self.populate_from_dictionary_hex(sc.create_fixed_info_dict(text.decode()), i+1))
         return unrecognized
 
 
